@@ -1,0 +1,81 @@
+/* ChequeTrack base styles. Layout: fixed top bar, sidebar on large screens, content area. */
+:root {
+    --app-sidebar-width: 240px;
+    --app-brand: #1f4e79;
+}
+
+body {
+    background: #f5f7fa;
+}
+
+.app-topbar {
+    background: var(--app-brand) !important;
+}
+
+.app-shell {
+    display: flex;
+    min-height: calc(100vh - 56px);
+}
+
+.app-sidebar {
+    width: var(--app-sidebar-width);
+    background: #fff;
+    border-right: 1px solid #dee2e6;
+}
+
+@media (min-width: 992px) {
+    .app-sidebar {
+        flex: 0 0 var(--app-sidebar-width);
+    }
+}
+
+.app-sidebar .nav-link {
+    color: #343a40;
+    border-radius: .375rem;
+}
+
+.app-sidebar .nav-link:hover,
+.app-sidebar .nav-link.active {
+    background: #e7eef6;
+    color: var(--app-brand);
+}
+
+.app-sidebar .nav-section {
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #6c757d;
+    padding: .75rem 1rem .25rem;
+}
+
+.app-content {
+    flex: 1;
+    padding: 1.5rem;
+    min-width: 0;
+}
+
+/* Amounts are always right-aligned with tabular digits */
+.amount {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Login page */
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: linear-gradient(160deg, var(--app-brand) 0%, #2d6aa3 100%);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 380px;
+}
+
+.login-logo {
+    font-size: 2.5rem;
+    color: var(--app-brand);
+}

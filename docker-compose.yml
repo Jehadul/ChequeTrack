@@ -1,0 +1,37 @@
+# Runs ChequeTrack with PostgreSQL 15.
+#   docker compose up --build
+# Put real secrets in a .env file next to this one (it is git-ignored).
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: chequetrack
+      POSTGRES_USER: ${DB_USERNAME:-chequetrack}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-chequetrack}
+    ports:
+      - "5433:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d chequetrack"]
+      interval: 5s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/chequetrack
+      DB_USERNAME: ${DB_USERNAME:-chequetrack}
+      DB_PASSWORD: ${DB_PASSWORD:-chequetrack}
+      # Generate with: openssl rand -base64 48
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      # Optional: temporary password for the first admin (empty = random, printed in the log)
+      ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD:-}
+    ports:
+      - "8080:8080"
+
+volumes:
+  db-data:

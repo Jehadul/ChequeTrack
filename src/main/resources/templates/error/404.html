@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Page not found</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="text-center py-5">
+        <i class="bi bi-search display-4 text-secondary"></i>
+        <div class="display-6 text-secondary">404</div>
+        <h1 class="h4 mt-2">Page not found</h1>
+        <p class="text-secondary">The page or record you asked for does not exist.</p>
+        <a class="btn btn-primary" th:href="@{/}"><i class="bi bi-house"></i> Home</a>
+    </div>
+</th:block>
+</body>
+</html>

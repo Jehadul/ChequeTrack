@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title layout:title-pattern="$CONTENT_TITLE · ChequeTrack">ChequeTrack</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/font/bootstrap-icons.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <th:block layout:fragment="head"></th:block>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg app-topbar" data-bs-theme="dark">
+    <div class="container-fluid">
+        <button class="btn btn-link text-white d-lg-none" type="button"
+                data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-label="Menu">
+            <i class="bi bi-list fs-4"></i>
+        </button>
+        <a class="navbar-brand fw-semibold" th:href="@{/}">
+            <i class="bi bi-journal-check me-1"></i> ChequeTrack
+        </a>
+        <div class="ms-auto dropdown" sec:authorize="isAuthenticated()">
+            <button class="btn btn-link text-white text-decoration-none dropdown-toggle" type="button"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-person-circle"></i>
+                <span sec:authentication="principal.fullName">User</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><span class="dropdown-item-text small text-secondary"
+                          sec:authentication="name">username</span></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" th:href="@{/account/change-password}">
+                    <i class="bi bi-key me-2"></i>Change password</a></li>
+                <li>
+                    <form th:action="@{/logout}" method="post">
+                        <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>Log out</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="app-shell">
+    <aside class="offcanvas-lg offcanvas-start app-sidebar" id="sidebar" tabindex="-1">
+        <div class="offcanvas-header d-lg-none">
+            <h5 class="offcanvas-title">Menu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar"></button>
+        </div>
+        <nav class="nav flex-column p-2">
+            <a class="nav-link" th:href="@{/}"><i class="bi bi-speedometer2 me-2"></i>Home</a>
+            <!-- Each module adds its own menu section here -->
+        </nav>
+    </aside>
+
+    <main class="app-content">
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <th:block layout:fragment="content"></th:block>
+    </main>
+</div>
+
+<script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+<th:block layout:fragment="scripts"></th:block>
+</body>
+</html>
