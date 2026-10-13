@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="${form.id} ? 'Edit role' : 'New role'">Role</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <h1 class="h4 mb-3">
+        <i class="bi bi-shield-check"></i>
+        <span th:text="${form.id} ? 'Edit role' : 'New role'">Role</span>
+    </h1>
+
+    <form th:action="${form.id} ? @{/admin/roles/{id}(id=${form.id})} : @{/admin/roles}"
+          th:object="${form}" method="post" novalidate style="max-width: 900px">
+        <input type="hidden" th:field="*{version}">
+        <div th:replace="~{fragments/forms :: globalErrors}"></div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="code" class="form-label">Code <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{code}" class="form-control text-uppercase"
+                               th:classappend="${#fields.hasErrors('code')} ? 'is-invalid'"
+                               th:readonly="${form.id != null}" maxlength="30">
+                        <div class="invalid-feedback" th:errors="*{code}"></div>
+                    </div>
+                    <div class="col-md-8 mb-3">
+                        <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{name}" class="form-control"
+                               th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'" maxlength="100">
+                        <div class="invalid-feedback" th:errors="*{name}"></div>
+                    </div>
+                </div>
+                <div>
+                    <label for="description" class="form-label">Description</label>
+                    <input type="text" th:field="*{description}" class="form-control" maxlength="300">
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-white fw-semibold">Permissions</div>
+            <div class="card-body">
+                <div th:if="${adminRole}" class="alert alert-info py-2 small">
+                    <i class="bi bi-info-circle"></i>
+                    The Administrator role always has every permission, so the company can never be locked out.
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3" th:each="group : ${permissionGroups}">
+                        <h2 class="h6 text-secondary text-uppercase small" th:text="${group.name}">Group</h2>
+                        <div class="form-check" th:each="p : ${group.permissions}">
+                            <input class="form-check-input" type="checkbox" th:field="*{permissions}"
+                                   th:value="${p.code}" th:disabled="${adminRole}">
+                            <label class="form-check-label" th:for="${#ids.prev('permissions')}">
+                                <span th:text="${p.description}">Description</span>
+                                <code class="small text-secondary ms-1" th:text="${p.code}">CODE</code>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>
+        <a th:href="@{/admin/roles}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+</th:block>
+</body>
+</html>

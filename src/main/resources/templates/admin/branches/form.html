@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="${form.id} ? 'Edit branch' : 'New branch'">Branch</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <h1 class="h4 mb-3">
+        <i class="bi bi-diagram-3"></i>
+        <span th:text="${form.id} ? 'Edit branch' : 'New branch'">Branch</span>
+    </h1>
+
+    <div class="card" style="max-width: 720px">
+        <div class="card-body">
+            <form th:action="${form.id} ? @{/admin/branches/{id}(id=${form.id})} : @{/admin/branches}"
+                  th:object="${form}" method="post" novalidate>
+                <input type="hidden" th:field="*{version}">
+                <div th:replace="~{fragments/forms :: globalErrors}"></div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="code" class="form-label">Code <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{code}" class="form-control text-uppercase"
+                               th:classappend="${#fields.hasErrors('code')} ? 'is-invalid'"
+                               th:readonly="${form.id != null}" maxlength="20">
+                        <div class="invalid-feedback" th:errors="*{code}"></div>
+                        <div class="form-text" th:if="${form.id == null}">Cannot be changed later.</div>
+                    </div>
+                    <div class="col-md-8 mb-3">
+                        <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{name}" class="form-control"
+                               th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'" maxlength="150">
+                        <div class="invalid-feedback" th:errors="*{name}"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="address" class="form-label">Address</label>
+                    <textarea th:field="*{address}" class="form-control" rows="2" maxlength="300"></textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="phone" class="form-label">Phone</label>
+                        <input type="text" th:field="*{phone}" class="form-control" maxlength="50">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" th:field="*{email}" class="form-control"
+                               th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'" maxlength="150">
+                        <div class="invalid-feedback" th:errors="*{email}"></div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>
+                <a th:href="@{/admin/branches}" class="btn btn-outline-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

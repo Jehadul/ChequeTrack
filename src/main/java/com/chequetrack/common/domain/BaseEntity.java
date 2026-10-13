@@ -74,6 +74,16 @@ public abstract class BaseEntity {
         return id == null;
     }
 
+    /**
+     * Call with the version the user's form was loaded with. If someone else saved
+     * the record since, the edit is refused instead of overwriting their change.
+     */
+    public void checkVersion(Long formVersion) {
+        if (formVersion != null && !formVersion.equals(version)) {
+            throw new org.springframework.orm.ObjectOptimisticLockingFailureException(getClass(), id);
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

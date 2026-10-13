@@ -79,3 +79,44 @@ body {
     font-size: 2.5rem;
     color: var(--app-brand);
 }
+
+/* Status timeline (fragments/history.html) */
+.status-timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 1rem;
+    border-left: 2px solid #dee2e6;
+}
+
+.status-timeline li {
+    position: relative;
+    padding: 0 0 1rem .75rem;
+}
+
+.status-timeline li:last-child {
+    padding-bottom: 0;
+}
+
+.status-timeline li::before {
+    content: "";
+    position: absolute;
+    left: -1.42rem;
+    top: .3rem;
+    width: .75rem;
+    height: .75rem;
+    border-radius: 50%;
+    background: var(--app-brand);
+    border: 2px solid #fff;
+}
+
+/* Audit entries */
+.audit-action {
+    font-family: var(--bs-font-monospace);
+    font-weight: 500;
+    font-size: .7rem;
+}
+
+.audit-changes th {
+    width: 1%;
+    white-space: nowrap;
+}

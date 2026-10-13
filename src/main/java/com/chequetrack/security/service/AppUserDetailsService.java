@@ -1,6 +1,7 @@
 package com.chequetrack.security.service;
 
 import com.chequetrack.security.config.SecurityProperties;
+import com.chequetrack.security.domain.AppUser;
 import com.chequetrack.security.repository.AppUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -15,6 +16,7 @@ import java.time.Clock;
 public class AppUserDetailsService implements UserDetailsService {
 
     private final AppUserRepository userRepository;
+    private final UserAccessProvider accessProvider;
     private final SecurityProperties properties;
     private final Clock clock;
 
@@ -22,7 +24,19 @@ public class AppUserDetailsService implements UserDetailsService {
     @Transactional(readOnly = true)
     public AppUserPrincipal loadUserByUsername(String username) {
         return userRepository.findByUsername(username)
-                .map(user -> new AppUserPrincipal(user, clock.instant(), properties.password().expiryDays()))
+                .map(this::toPrincipal)
                 .orElseThrow(() -> new UsernameNotFoundException("Unknown user"));
+    }
+
+    @Transactional(readOnly = true)
+    public AppUserPrincipal loadUserById(Long id) {
+        return userRepository.findById(id)
+                .map(this::toPrincipal)
+                .orElseThrow(() -> new UsernameNotFoundException("Unknown user"));
+    }
+
+    private AppUserPrincipal toPrincipal(AppUser user) {
+        UserAccess access = accessProvider.forRole(user.getRoleId());
+        return new AppUserPrincipal(user, access, clock.instant(), properties.password().expiryDays());
     }
 }

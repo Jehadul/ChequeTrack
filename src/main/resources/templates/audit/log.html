@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Audit log</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex align-items-center mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-journal-text"></i> Audit log</h1>
+        <span class="ms-auto small text-secondary">
+            <i class="bi bi-lock"></i> Read-only. Entries can never be changed or deleted.
+        </span>
+    </div>
+
+    <form th:action="@{/audit}" method="get" class="card card-body mb-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-6 col-md-2">
+                <label for="from" class="form-label small mb-1">From</label>
+                <input type="date" id="from" name="from" class="form-control form-control-sm" th:value="${filter.from}">
+            </div>
+            <div class="col-6 col-md-2">
+                <label for="to" class="form-label small mb-1">To</label>
+                <input type="date" id="to" name="to" class="form-control form-control-sm" th:value="${filter.to}">
+            </div>
+            <div class="col-6 col-md-2">
+                <label for="username" class="form-label small mb-1">User</label>
+                <input type="text" id="username" name="username" class="form-control form-control-sm"
+                       th:value="${filter.username}" maxlength="100">
+            </div>
+            <div class="col-6 col-md-2">
+                <label for="action" class="form-label small mb-1">Action</label>
+                <select id="action" name="action" class="form-select form-select-sm">
+                    <option value="">All</option>
+                    <option th:each="a : ${actions}" th:value="${a}" th:text="${a}"
+                            th:selected="${a == filter.action}">ACTION</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label for="entityType" class="form-label small mb-1">Record type</label>
+                <select id="entityType" name="entityType" class="form-select form-select-sm">
+                    <option value="">All</option>
+                    <option th:each="t : ${entityTypes}" th:value="${t}" th:text="${t}"
+                            th:selected="${t == filter.entityType}">Type</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-primary btn-sm flex-fill"><i class="bi bi-funnel"></i> Filter</button>
+                <a th:href="@{/audit}" class="btn btn-outline-secondary btn-sm" title="Clear filters"><i class="bi bi-x-lg"></i></a>
+            </div>
+        </div>
+    </form>
+
+    <div class="card">
+        <div th:replace="~{fragments/history :: auditTable(${entries.content}, true)}"></div>
+        <div class="card-footer bg-white d-flex align-items-center small" th:if="${entries.totalElements > 0}">
+            <span class="text-secondary"
+                  th:text="|${entries.number * entries.size + 1}–${entries.number * entries.size + entries.numberOfElements} of ${entries.totalElements}|">1–50 of 120</span>
+            <nav class="ms-auto">
+                <a th:if="${entries.hasPrevious()}" class="btn btn-outline-secondary btn-sm"
+                   th:href="@{/audit(from=${filter.from}, to=${filter.to}, username=${filter.username}, action=${filter.action}, entityType=${filter.entityType}, page=${entries.number - 1})}">
+                    <i class="bi bi-chevron-left"></i> Newer</a>
+                <a th:if="${entries.hasNext()}" class="btn btn-outline-secondary btn-sm"
+                   th:href="@{/audit(from=${filter.from}, to=${filter.to}, username=${filter.username}, action=${filter.action}, entityType=${filter.entityType}, page=${entries.number + 1})}">
+                    Older <i class="bi bi-chevron-right"></i></a>
+            </nav>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

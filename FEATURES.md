@@ -89,7 +89,7 @@ M0 Foundation
 - [x] Account lockout after N failed login attempts *(README)*
 - [x] Forced password change on first login
 - [x] First administrator created automatically on a fresh install
-- [ ] Forgot / reset password (admin reset at minimum): service done; the screen comes with user management in M2
+- [x] Forgot / reset password: administrator resets it on the user screen (M2) and gives the user a temporary password
 - [ ] Multi-factor authentication, TOTP or email OTP *(README, optional)*
 
 ## M2. Authorization, users & branch separation
@@ -98,14 +98,19 @@ M0 Foundation
 **Proposal ref:** 3, 4.6
 **Demo:** the four users see different menus; a cashier cannot open another branch's record, even by typing its URL.
 
-- [ ] Roles: Administrator, Cashier, Accounts Manager, Auditor
-- [ ] Permission for each menu and action (e.g. `CHEQUE_VOID`, `LAYOUT_EDIT`)
-- [ ] Menus and buttons shown according to role
-- [ ] Method-level security on services and API endpoints
-- [ ] Company and branch master data
-- [ ] User & role management screen: add, edit and deactivate users; assign role and branch *(README)*
-- [ ] Every query limited to the user's company and branch
-- [ ] Accounts Manager and Auditor can see the branches they are assigned to
+- [x] Roles: Administrator, Cashier, Accounts Manager, Auditor (built-in), plus custom roles
+- [x] Permission for each menu and action; each later module adds its own codes (e.g. `CHEQUE_VOID`, `LAYOUT_EDIT`)
+- [x] Menus and buttons shown according to permissions
+- [x] Method-level security on services (`@PreAuthorize`), covering web pages and the API
+- [x] Company and branch master data
+- [x] User & role management screens: add, edit, enable/disable, reset password, unlock; assign role and branches *(README)*
+- [x] Role, branch or status changes apply to open sessions on the next click (access stamp)
+- [x] Safety rules: the Administrator role keeps every permission; admins cannot disable themselves or change their own access
+- [x] Organization data and users limited to the user's company and branches (other branches answer "not found")
+- [ ] Automatic branch filter on every cheque query (Hibernate filter): built in M4 with the first branch-scoped table
+- [x] Accounts Manager and Auditor can see the branches they are assigned to
+
+Acceptance test: `bash scripts/e2e/m2-authorization.sh` (50 checks).
 
 ## M3. Audit trail & history framework
 
@@ -113,11 +118,15 @@ M0 Foundation
 **Proposal ref:** Objective 3, 4.6
 **Demo:** perform actions from M1–M2 and show them in the audit log screen.
 
-- [ ] `audit_log` table recording every user action: login, logout, failed login, settings changes, prints, approvals, exports *(README)*
-- [ ] `status_history` table: record type, record id, old status, new status, user, time, reason, used by every later module
-- [ ] Common service or aspect so modules write history in one line
-- [ ] No hard deletes anywhere; deletions become cancel/void with a reason
-- [ ] Audit log screen with filters (user, date, action), read-only for the Auditor
+- [x] `audit_log` table recording user actions: login, logout, failed/refused login, lockout, password change/reset, company/branch/role/user changes with old → new values *(README)*. Prints, approvals and exports are added by M9–M13 with the same one-line call
+- [x] `status_history` table: record type, record id, old status, new status, user, time, reason, used by every later module (users already use it: disable/enable needs a reason)
+- [x] Modules write history in one line: `events.publishEvent(AuditEvent.of(...))` / `new StatusChangedEvent(...)`, saved in the same transaction (rolled back together)
+- [x] Both tables are append-only, enforced by database triggers (UPDATE, DELETE and TRUNCATE are refused)
+- [x] No hard deletes anywhere; deletions become cancel/void with a reason
+- [x] Audit log screen with filters (date, user, action, record type) and paging, read-only, for Administrator and Auditor (`AUDIT_VIEW`)
+- [x] History page per user: status timeline and all activity on that user; the timeline fragment is reused for cheques in M7
+
+Acceptance test: `bash scripts/e2e/m3-audit.sh` (39 checks; run `m2-authorization.sh` first).
 
 ## M4. Setup / master data
 
@@ -125,6 +134,7 @@ M0 Foundation
 **Proposal ref:** 4.1
 **Demo:** the Administrator sets up a bank, a company account, a customer, a supplier, reason lists and approval limits.
 
+- [ ] `BranchScopedEntity` base class + Hibernate filter enabled for every transaction (carried over from M2), tested with the first branch-scoped table
 - [ ] **Bank list:** banks, branches and routing numbers (for cheques the company receives)
 - [ ] **Company bank accounts** (the accounts the company issues cheques from)
 - [ ] **Customers and suppliers** (parties)

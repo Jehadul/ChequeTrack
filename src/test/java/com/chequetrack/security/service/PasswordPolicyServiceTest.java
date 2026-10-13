@@ -44,7 +44,7 @@ class PasswordPolicyServiceTest {
 
     @Test
     void temporaryPasswordsSatisfyThePolicy() {
-        AccountService accounts = new AccountService(null, null, null, policy, null, null);
+        AccountService accounts = new AccountService(null, null, null, policy, null, null, null);
         for (int i = 0; i < 50; i++) {
             assertThat(policy.validate(accounts.generateTemporaryPassword(), "admin")).isEmpty();
         }

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Status timeline of any record (StatusHistoryEntry list, oldest first).
+  Reused by every module that has statuses (users now, cheques from M7).
+-->
+<div th:fragment="statusTimeline(entries)">
+    <p th:if="${#lists.isEmpty(entries)}" class="text-secondary small mb-0">No status changes recorded.</p>
+    <ol class="status-timeline" th:unless="${#lists.isEmpty(entries)}">
+        <li th:each="h : ${entries}">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <span th:if="${h.fromStatus}" class="badge text-bg-light border" th:text="${h.fromStatus}">FROM</span>
+                <i th:if="${h.fromStatus}" class="bi bi-arrow-right text-secondary"></i>
+                <span class="badge text-bg-primary" th:text="${h.toStatus}">TO</span>
+                <span class="small text-secondary ms-auto" th:text="${@displayFormat.ts(h.changedAt)}">time</span>
+            </div>
+            <div class="small mt-1">
+                <i class="bi bi-person"></i> <span th:text="${h.username}">user</span>
+                <span th:if="${h.reason}"> — <em th:text="${h.reason}">reason</em></span>
+            </div>
+        </li>
+    </ol>
+</div>
+
+<!-- Changed fields of one audit entry: field: from → to -->
+<th:block th:fragment="changes(details)">
+    <table th:if="${details}" class="table table-sm table-borderless small mb-0 audit-changes">
+        <tr th:each="d : ${details}">
+            <th class="text-secondary fw-normal pe-2" th:text="${d.key}">field</th>
+            <td>
+                <span class="text-decoration-line-through text-secondary" th:text="${@displayFormat.value(d.value['from'])}">old</span>
+                <i class="bi bi-arrow-right mx-1 text-secondary"></i>
+                <span th:text="${@displayFormat.value(d.value['to'])}">new</span>
+            </td>
+        </tr>
+    </table>
+</th:block>
+
+<!-- Audit entries table. showUser=false hides the user column when all rows are about one user. -->
+<div th:fragment="auditTable(entries, showEntity)" class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+        <thead class="table-light">
+        <tr>
+            <th style="width: 11rem">When</th>
+            <th>User</th>
+            <th>Action</th>
+            <th th:if="${showEntity}">Record</th>
+            <th>What happened</th>
+            <th>IP</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="a : ${entries}">
+            <td class="small text-nowrap" th:text="${@displayFormat.ts(a.occurredAt)}">time</td>
+            <td class="small" th:text="${a.username}">user</td>
+            <td><span class="badge audit-action" th:text="${a.action}"
+                      th:classappend="${#strings.startsWith(a.action, 'LOGIN_FAILED') or #strings.startsWith(a.action, 'LOGIN_REFUSED') or a.action == 'ACCOUNT_LOCKED' or #strings.endsWith(a.action, '_DISABLED') or #strings.endsWith(a.action, '_DELETED')} ? 'text-bg-danger' : 'text-bg-light border'">ACTION</span></td>
+            <td th:if="${showEntity}" class="small text-nowrap">
+                <span th:if="${a.entityType}" th:text="${a.entityType + ' #' + a.entityId}">User #1</span>
+            </td>
+            <td class="small">
+                <div th:text="${a.summary}">summary</div>
+                <th:block th:replace="~{fragments/history :: changes(${a.details})}"></th:block>
+            </td>
+            <td class="small text-secondary" th:text="${a.ipAddress}">ip</td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(entries)}">
+            <td colspan="6" class="text-center text-secondary py-4">No entries.</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>

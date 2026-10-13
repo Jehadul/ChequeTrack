@@ -30,8 +30,9 @@
                 <span sec:authentication="principal.fullName">User</span>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><span class="dropdown-item-text small text-secondary"
-                          sec:authentication="name">username</span></li>
+                <li><span class="dropdown-item-text small text-secondary">
+                    <span sec:authentication="name">username</span> ·
+                    <span sec:authentication="principal.roleName">role</span></span></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" th:href="@{/account/change-password}">
                     <i class="bi bi-key me-2"></i>Change password</a></li>
@@ -53,7 +54,22 @@
         </div>
         <nav class="nav flex-column p-2">
             <a class="nav-link" th:href="@{/}"><i class="bi bi-speedometer2 me-2"></i>Home</a>
-            <!-- Each module adds its own menu section here -->
+            <!-- Each module adds its own menu section here, each link shown only with its permission -->
+
+            <div sec:authorize="hasAnyAuthority('COMPANY_MANAGE','BRANCH_VIEW','USER_VIEW','ROLE_MANAGE')"
+                 class="nav-section">Administration</div>
+            <a sec:authorize="hasAuthority('COMPANY_MANAGE')" class="nav-link" th:href="@{/admin/company}">
+                <i class="bi bi-building me-2"></i>Company</a>
+            <a sec:authorize="hasAuthority('BRANCH_VIEW')" class="nav-link" th:href="@{/admin/branches}">
+                <i class="bi bi-diagram-3 me-2"></i>Branches</a>
+            <a sec:authorize="hasAuthority('USER_VIEW')" class="nav-link" th:href="@{/admin/users}">
+                <i class="bi bi-people me-2"></i>Users</a>
+            <a sec:authorize="hasAuthority('ROLE_MANAGE')" class="nav-link" th:href="@{/admin/roles}">
+                <i class="bi bi-shield-check me-2"></i>Roles &amp; permissions</a>
+
+            <div sec:authorize="hasAuthority('AUDIT_VIEW')" class="nav-section">Audit</div>
+            <a sec:authorize="hasAuthority('AUDIT_VIEW')" class="nav-link" th:href="@{/audit}">
+                <i class="bi bi-journal-text me-2"></i>Audit log</a>
         </nav>
     </aside>
 

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 public interface AppUserRepository extends JpaRepository<AppUser, Long> {
@@ -15,6 +16,30 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
     Optional<AppUser> findByUsername(@Param("username") String username);
 
     boolean existsByUsernameIgnoreCase(String username);
+
+    List<AppUser> findByCompanyIdOrderByUsername(Long companyId);
+
+    Optional<AppUser> findByIdAndCompanyId(Long id, Long companyId);
+
+    long countByRoleId(Long roleId);
+
+    @Query("select count(u) from AppUser u where u.homeBranchId = :branchId and u.enabled = true")
+    long countActiveWithHomeBranch(@Param("branchId") Long branchId);
+
+    /** Cheap per-request check of an open session (deleted users are excluded by @SQLRestriction). */
+    @Query("select u.enabled as enabled, u.accessStamp as accessStamp from AppUser u where u.id = :id")
+    Optional<SessionCheck> findSessionCheck(@Param("id") Long id);
+
+    interface SessionCheck {
+        boolean isEnabled();
+
+        long getAccessStamp();
+    }
+
+    /** Ends or refreshes the sessions of everyone holding a role whose permissions changed. */
+    @Modifying
+    @Query(value = "UPDATE app_user SET access_stamp = access_stamp + 1 WHERE role_id = :roleId", nativeQuery = true)
+    int touchAccessForRole(@Param("roleId") Long roleId);
 
     /**
      * Counts a failed login in one atomic statement. When the limit is reached

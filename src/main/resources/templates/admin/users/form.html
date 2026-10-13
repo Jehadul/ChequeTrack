@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="${form.id} ? 'Edit user' : 'New user'">User</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <h1 class="h4 mb-3">
+        <i class="bi bi-person"></i>
+        <span th:text="${form.id} ? 'Edit user' : 'New user'">User</span>
+    </h1>
+
+    <form th:action="${form.id} ? @{/admin/users/{id}(id=${form.id})} : @{/admin/users}"
+          th:object="${form}" method="post" novalidate style="max-width: 900px">
+        <input type="hidden" th:field="*{version}">
+        <div th:replace="~{fragments/forms :: globalErrors}"></div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-white fw-semibold">Details</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{username}" class="form-control"
+                               th:classappend="${#fields.hasErrors('username')} ? 'is-invalid'"
+                               th:readonly="${form.id != null}" maxlength="50" autocapitalize="none">
+                        <div class="invalid-feedback" th:errors="*{username}"></div>
+                    </div>
+                    <div class="col-md-8 mb-3">
+                        <label for="fullName" class="form-label">Full name <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{fullName}" class="form-control"
+                               th:classappend="${#fields.hasErrors('fullName')} ? 'is-invalid'" maxlength="150">
+                        <div class="invalid-feedback" th:errors="*{fullName}"></div>
+                    </div>
+                </div>
+                <div class="mb-1">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" th:field="*{email}" class="form-control"
+                           th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'" maxlength="150">
+                    <div class="invalid-feedback" th:errors="*{email}"></div>
+                    <div class="form-text">Used for reminders and alerts.</div>
+                </div>
+                <div class="form-text" th:if="${form.id == null}">
+                    <i class="bi bi-info-circle"></i> A temporary password is generated and shown after saving.
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-white fw-semibold">Access</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="roleId" class="form-label">Role <span class="text-danger">*</span></label>
+                        <select th:field="*{roleId}" class="form-select"
+                                th:classappend="${#fields.hasErrors('roleId')} ? 'is-invalid'">
+                            <option value="">Choose…</option>
+                            <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.name}">Role</option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{roleId}"></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="homeBranchId" class="form-label">Home branch <span class="text-danger">*</span></label>
+                        <select th:field="*{homeBranchId}" class="form-select"
+                                th:classappend="${#fields.hasErrors('homeBranchId')} ? 'is-invalid'">
+                            <option value="">Choose…</option>
+                            <option th:each="b : ${branches}" th:value="${b.id}" th:text="${b.label}">Branch</option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{homeBranchId}"></div>
+                    </div>
+                </div>
+
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" th:field="*{allBranches}" id="allBranchesSwitch">
+                    <label class="form-check-label" for="allBranchesSwitch">
+                        Access to <strong>all branches</strong> (administrators, head-office managers, auditors)
+                    </label>
+                </div>
+
+                <div id="extraBranches">
+                    <label class="form-label mt-2">Other branches this user may work with</label>
+                    <div class="row">
+                        <div class="col-sm-6 col-md-4" th:each="b : ${branches}">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" th:field="*{branchIds}" th:value="${b.id}">
+                                <label class="form-check-label" th:for="${#ids.prev('branchIds')}" th:text="${b.label}">Branch</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-text">The home branch is always included. Cashiers normally have only their home branch.</div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>
+        <a th:href="${form.id} ? @{/admin/users/{id}(id=${form.id})} : @{/admin/users}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+</th:block>
+
+<th:block layout:fragment="scripts">
+    <script>
+        // Hide the branch list when "all branches" is on.
+        $(function () {
+            const toggle = () => $('#extraBranches').toggle(!$('#allBranchesSwitch').is(':checked'));
+            $('#allBranchesSwitch').on('change', toggle);
+            toggle();
+        });
+    </script>
+</th:block>
+</body>
+</html>

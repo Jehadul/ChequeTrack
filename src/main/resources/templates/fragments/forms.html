@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Errors not tied to one field (business rules). Use inside a th:object form. -->
+<div th:fragment="globalErrors" th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger py-2" role="alert">
+    <div th:each="err : ${#fields.globalErrors()}" style="white-space: pre-line" th:text="${err}"></div>
+</div>
+
+<!-- Active / inactive badge -->
+<span th:fragment="activeBadge(active)" class="badge"
+      th:classappend="${active} ? 'text-bg-success' : 'text-bg-secondary'"
+      th:text="${active} ? 'Active' : 'Inactive'"></span>
+
+<!-- User status badges (UserView) -->
+<th:block th:fragment="userStatus(user)">
+    <span th:if="${user.enabled}" class="badge text-bg-success">Active</span>
+    <span th:unless="${user.enabled}" class="badge text-bg-secondary">Disabled</span>
+    <span th:if="${user.locked}" class="badge text-bg-danger">Locked</span>
+    <span th:if="${user.mustChangePassword}" class="badge text-bg-warning">Temporary password</span>
+</th:block>
+
+</body>
+</html>

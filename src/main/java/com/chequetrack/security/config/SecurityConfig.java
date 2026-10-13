@@ -2,7 +2,11 @@ package com.chequetrack.security.config;
 
 import com.chequetrack.security.service.AppUserDetailsService;
 import com.chequetrack.security.service.JwtUserAuthenticationConverter;
+import com.chequetrack.security.repository.AppUserRepository;
 import com.chequetrack.security.web.LoginFailureHandler;
+import com.chequetrack.security.web.SessionRefreshFilter;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -74,8 +78,13 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain webFilterChain(HttpSecurity http,
                                               AuthenticationManager authenticationManager,
-                                              LoginFailureHandler loginFailureHandler) throws Exception {
+                                              LoginFailureHandler loginFailureHandler,
+                                              AppUserRepository userRepository,
+                                              AppUserDetailsService userDetailsService,
+                                              ApplicationEventPublisher events) throws Exception {
         http.authenticationManager(authenticationManager)
+                // Before authorization, so refreshed permissions are the ones checked
+                .addFilterBefore(new SessionRefreshFilter(userRepository, userDetailsService, events), AuthorizationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_RESOURCES).permitAll()
                         .anyRequest().authenticated())

@@ -1,5 +1,6 @@
 package com.chequetrack.security.service;
 
+import com.chequetrack.common.event.AuditEvent;
 import com.chequetrack.common.exception.BusinessException;
 import com.chequetrack.common.exception.NotFoundException;
 import com.chequetrack.security.config.SecurityProperties;
@@ -8,6 +9,7 @@ import com.chequetrack.security.domain.PasswordHistory;
 import com.chequetrack.security.repository.AppUserRepository;
 import com.chequetrack.security.repository.PasswordHistoryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Limit;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -32,16 +34,19 @@ public class AccountService {
     private final PasswordPolicyService passwordPolicy;
     private final SecurityProperties properties;
     private final Clock clock;
+    private final ApplicationEventPublisher events;
     private final SecureRandom random = new SecureRandom();
 
     /** Creates a user with a temporary password that must be changed at first login. */
     @Transactional
-    public AppUser createUser(String username, String fullName, String email, String temporaryPassword) {
-        if (userRepository.existsByUsernameIgnoreCase(username.trim())) {
-            throw new BusinessException("Username '" + username + "' is already taken.");
+    public AppUser createUser(NewUserAccount account) {
+        if (userRepository.existsByUsernameIgnoreCase(account.username().trim())) {
+            throw new BusinessException("Username '" + account.username() + "' is already taken.");
         }
         Instant now = clock.instant();
-        AppUser user = AppUser.create(username, fullName, email, passwordEncoder.encode(temporaryPassword), now);
+        AppUser user = AppUser.create(account.username(), account.fullName(), account.email(),
+                passwordEncoder.encode(account.temporaryPassword()), account.companyId(), now);
+        user.assignAccess(account.roleId(), account.homeBranchId(), account.allBranches(), account.branchIds());
         userRepository.save(user);
         historyRepository.save(new PasswordHistory(user.getId(), user.getPasswordHash(), now));
         return user;
@@ -71,10 +76,11 @@ public class AccountService {
         String hash = passwordEncoder.encode(newPassword);
         user.changePassword(hash, now);
         historyRepository.save(new PasswordHistory(userId, hash, now));
+        events.publishEvent(AuditEvent.of("PASSWORD_CHANGED", "User", userId, "Changed own password"));
     }
 
     /**
-     * An administrator resets a user's password (screen added in M2).
+     * An administrator resets a user's password.
      * @return the generated temporary password, to be given to the user
      */
     @Transactional
@@ -82,6 +88,8 @@ public class AccountService {
         AppUser user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User", userId));
         String temporary = generateTemporaryPassword();
         user.resetPassword(passwordEncoder.encode(temporary), clock.instant());
+        events.publishEvent(AuditEvent.of("PASSWORD_RESET", "User", userId,
+                "Reset the password of '" + user.getUsername() + "' (temporary password issued)"));
         return temporary;
     }
 

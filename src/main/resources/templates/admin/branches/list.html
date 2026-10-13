@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Branches</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex align-items-center mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-diagram-3"></i> Branches</h1>
+        <a sec:authorize="hasAuthority('BRANCH_MANAGE')" th:href="@{/admin/branches/new}"
+           class="btn btn-primary btn-sm ms-auto"><i class="bi bi-plus-lg"></i> New branch</a>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th sec:authorize="hasAuthority('BRANCH_MANAGE')" class="text-end">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="b : ${branches}">
+                    <td class="fw-semibold" th:text="${b.code}">HO</td>
+                    <td th:text="${b.name}">Head Office</td>
+                    <td th:text="${b.phone}"></td>
+                    <td th:text="${b.email}"></td>
+                    <td><span th:replace="~{fragments/forms :: activeBadge(${b.active})}"></span></td>
+                    <td sec:authorize="hasAuthority('BRANCH_MANAGE')" class="text-end text-nowrap">
+                        <a th:href="@{/admin/branches/{id}/edit(id=${b.id})}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-pencil"></i> Edit</a>
+                        <form th:if="${b.active}" th:action="@{/admin/branches/{id}/deactivate(id=${b.id})}"
+                              method="post" class="d-inline">
+                            <button class="btn btn-outline-danger btn-sm" type="submit">Deactivate</button>
+                        </form>
+                        <form th:unless="${b.active}" th:action="@{/admin/branches/{id}/activate(id=${b.id})}"
+                              method="post" class="d-inline">
+                            <button class="btn btn-outline-success btn-sm" type="submit">Activate</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(branches)}">
+                    <td colspan="6" class="text-center text-secondary py-4">No branches.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

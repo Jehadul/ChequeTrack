@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Roles</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex align-items-center mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-shield-check"></i> Roles &amp; permissions</h1>
+        <a th:href="@{/admin/roles/new}" class="btn btn-primary btn-sm ms-auto"><i class="bi bi-plus-lg"></i> New role</a>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Code</th>
+                    <th>Description</th>
+                    <th class="text-end">Permissions</th>
+                    <th class="text-end">Users</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${roles}">
+                    <td class="fw-semibold">
+                        <span th:text="${r.name}">Cashier</span>
+                        <span th:if="${r.systemRole}" class="badge text-bg-light border ms-1">built-in</span>
+                    </td>
+                    <td><code th:text="${r.code}">CASHIER</code></td>
+                    <td class="small text-secondary" th:text="${r.description}"></td>
+                    <td class="text-end" th:text="${#sets.size(r.permissionCodes)}">0</td>
+                    <td class="text-end" th:text="${userCounts[r.id]}">0</td>
+                    <td class="text-end text-nowrap">
+                        <a th:href="@{/admin/roles/{id}/edit(id=${r.id})}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-pencil"></i> Edit</a>
+                        <form th:unless="${r.systemRole}" th:action="@{/admin/roles/{id}/delete(id=${r.id})}"
+                              method="post" class="d-inline" onsubmit="return confirm('Delete this role?')">
+                            <button class="btn btn-outline-danger btn-sm" type="submit"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>
