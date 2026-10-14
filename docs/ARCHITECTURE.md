@@ -38,6 +38,7 @@ REST API (JWT) ──┼──► Service layer (business rules, @Transactional)
 Scheduled jobs ──┘
 ```
 
+- Dependencies are injected through a **hand-written constructor**. Lombok's `@RequiredArgsConstructor` is not used: the editor's Java tooling reports false "Flexible Constructor Bodies" errors on it. Lombok is still used for `@Getter`, `@Data`, `@Builder`, `@NoArgsConstructor` and `@Slf4j`.
 - Controllers stay thin: they validate input, call one service method and choose a view or response.
 - **All business rules live in services**, so the web pages, the API and the scheduled jobs behave the same way.
 - Services expose DTOs or domain objects. Entities are never bound directly to forms (this prevents mass-assignment problems).
@@ -60,7 +61,11 @@ Scheduled jobs ──┘
 
 - Each user has a company, a home branch, a set of allowed branches, or "all branches". The logged-in principal (`AppUserPrincipal`) carries these, and service code reads them through `CurrentUser.get()`.
 - Organization data (branches, roles, users) is always looked up with the company id. A record from another branch is answered with **404**, the same as a record that does not exist, so nothing leaks.
-- Every business table has `company_id` and `branch_id`. **M4** adds a `BranchScopedEntity` base class and a Hibernate filter switched on for every transaction, so a forgotten `WHERE` clause cannot leak data. Services still check again before updating (defence in depth).
+- **Branch-scoped records** (company bank accounts, invoices and bills, and later cheque books and cheques) extend `BranchScopedEntity` (`company_id`, `branch_id`). `BranchScopeTransactionManager` replaces Spring Boot's transaction manager. When a transaction starts, it switches on a Hibernate filter for the logged-in user: `companyScope` for "all branches" users, `branchScope` (company + allowed branches) for everyone else. Every JPQL/criteria query is limited, even one with no `WHERE` clause.
+- Hibernate filters do **not** apply to loading by id. Single records therefore go through `BranchScope.require(repository.findById(id), ...)`, which answers 404 for another branch's record. New records get their branch from `BranchScope.branchForNewRecord`, which accepts only the user's own active branches.
+- Filters also hide rows from **duplicate checks**. Uniqueness checks on branch-scoped tables therefore use native SQL (filters don't apply to it), so a number held by another branch is still found.
+- Work without a logged-in user (startup, scheduled jobs in M11) is not filtered and must choose its scope explicitly.
+- Company-wide master data (banks, parties, reasons, settings, approval rules) is always queried with the company id.
 
 ## Module boundaries in practice
 
@@ -126,8 +131,8 @@ Spring Security (login, failure, logout events) ──────────�
 
 ## 10. Testing
 
-- Unit tests (`mvnw test`) for pure rules: password policy, change tracking, and later amount-in-words and state machines.
-- Acceptance tests per module in `scripts/e2e/` drive the running app like a browser (cookies, CSRF, redirects) and check the database. They are repeatable and double as the documented manual test cases the proposal asks for.
+- M1–M3 have unit tests (`mvnw test`) and acceptance scripts in `scripts/e2e/`.
+- From M4 on, by decision of the project owner, no automated test code is added. Each module is checked by hand against the running app, and the formal test cases are written as part of the manual testing phase (weeks 11–12).
 
 ## 11. Runtime
 

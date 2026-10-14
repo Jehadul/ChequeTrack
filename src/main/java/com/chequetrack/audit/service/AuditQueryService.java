@@ -7,7 +7,6 @@ import com.chequetrack.audit.repository.AuditLogRepository;
 import com.chequetrack.audit.repository.StatusHistoryRepository;
 import com.chequetrack.security.service.CurrentUser;
 import jakarta.persistence.criteria.Predicate;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,7 +23,6 @@ import java.util.List;
 
 /** Read-only access to the audit log and status history. */
 @Service
-@RequiredArgsConstructor
 public class AuditQueryService {
 
     public static final int PAGE_SIZE = 50;
@@ -32,6 +30,14 @@ public class AuditQueryService {
     private final AuditLogRepository auditLogRepository;
     private final StatusHistoryRepository statusHistoryRepository;
     private final Clock clock;
+
+    public AuditQueryService(AuditLogRepository auditLogRepository,
+                             StatusHistoryRepository statusHistoryRepository,
+                             Clock clock) {
+        this.auditLogRepository = auditLogRepository;
+        this.statusHistoryRepository = statusHistoryRepository;
+        this.clock = clock;
+    }
 
     /** Audit log of the user's company, newest first. Failed logins with unknown usernames are included. */
     @Transactional(readOnly = true)

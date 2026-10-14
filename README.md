@@ -90,6 +90,8 @@ To use other values, set `DB_URL`, `DB_USERNAME` and `DB_PASSWORD`.
 ```
 Open http://localhost:8080. Flyway creates the tables on startup. Check the database connection at http://localhost:8080/actuator/health.
 
+If port 8080 is taken by another program, choose another port with the `PORT` variable, e.g. in PowerShell: `$env:PORT='8081'; .\mvnw.cmd spring-boot:run`.
+
 ### 3. First login
 On a fresh database the app creates the administrator account:
 

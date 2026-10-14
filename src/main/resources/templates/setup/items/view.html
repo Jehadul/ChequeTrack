@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="${item.itemType.label} + ' ' + ${item.number}">Invoice</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <h1 class="h4 mb-0"><span th:text="${item.itemType.label}">Invoice</span> <span th:text="${item.number}">INV-1</span></h1>
+        <span th:replace="~{fragments/forms :: itemStatus(${item.status})}"></span>
+        <a sec:authorize="hasAuthority('INVOICE_MANAGE')" th:if="${item.status.name() == 'OPEN'}"
+           th:href="@{/setup/{k}/{id}/edit(k=${kind}, id=${item.id})}" class="btn btn-outline-secondary btn-sm ms-auto">
+            <i class="bi bi-pencil"></i> Edit</a>
+        <a th:href="@{/setup/{k}(k=${kind})}" class="btn btn-link btn-sm" th:classappend="${item.status.name() != 'OPEN'} ? 'ms-auto'">
+            <i class="bi bi-arrow-left"></i> All</a>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4" th:text="${item.itemType.name() == 'INVOICE'} ? 'Customer' : 'Supplier'">Party</dt>
+                        <dd class="col-sm-8" th:text="${item.party.label}">Party</dd>
+                        <dt class="col-sm-4">Date</dt>
+                        <dd class="col-sm-8" th:text="${@displayFormat.date(item.itemDate)}"></dd>
+                        <dt class="col-sm-4">Due date</dt>
+                        <dd class="col-sm-8" th:text="${item.dueDate} ? ${@displayFormat.date(item.dueDate)} : '-'"></dd>
+                        <dt class="col-sm-4">Amount</dt>
+                        <dd class="col-sm-8" th:text="|Tk ${@displayFormat.amount(item.amount)}|"></dd>
+                        <dt class="col-sm-4">Settled by cheques</dt>
+                        <dd class="col-sm-8" th:text="|Tk ${@displayFormat.amount(item.settledAmount)}|"></dd>
+                        <dt class="col-sm-4">Outstanding</dt>
+                        <dd class="col-sm-8 fw-semibold" th:text="|Tk ${@displayFormat.amount(item.outstanding)}|"></dd>
+                        <dt class="col-sm-4">Branch</dt>
+                        <dd class="col-sm-8" th:text="${branchCodes[item.branchId]}"></dd>
+                        <dt class="col-sm-4">Narration</dt>
+                        <dd class="col-sm-8 mb-0" th:text="${item.narration} ?: '-'"></dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header bg-white fw-semibold">Activity</div>
+                <div th:replace="~{fragments/history :: auditTable(${auditEntries}, false)}"></div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card mb-3">
+                <div class="card-header bg-white fw-semibold">Status history</div>
+                <div class="card-body">
+                    <div th:replace="~{fragments/history :: statusTimeline(${statusHistory})}"></div>
+                </div>
+            </div>
+            <div class="card" sec:authorize="hasAuthority('INVOICE_MANAGE')"
+                 th:if="${item.status.name() != 'CANCELLED' and item.settledAmount.signum() == 0}">
+                <div class="card-header bg-white fw-semibold">Cancel</div>
+                <div class="card-body">
+                    <form th:action="@{/setup/{k}/{id}/cancel(k=${kind}, id=${item.id})}" method="post"
+                          onsubmit="return confirm('Cancel this item?')">
+                        <label for="reason" class="form-label small">Reason <span class="text-danger">*</span></label>
+                        <input type="text" id="reason" name="reason" class="form-control form-control-sm mb-2" required maxlength="300">
+                        <button type="submit" class="btn btn-outline-danger btn-sm w-100"><i class="bi bi-x-circle"></i> Cancel</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

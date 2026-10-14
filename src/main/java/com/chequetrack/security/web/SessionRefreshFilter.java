@@ -8,7 +8,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -34,7 +33,6 @@ import java.util.Optional;
  * Not a Spring bean on purpose: it is added only to the web filter chain in SecurityConfig.
  */
 @Slf4j
-@RequiredArgsConstructor
 public class SessionRefreshFilter extends OncePerRequestFilter {
 
     private static final String[] SKIPPED_PREFIXES = {"/css/", "/js/", "/images/", "/webjars/", "/favicon.ico", "/error"};
@@ -42,7 +40,16 @@ public class SessionRefreshFilter extends OncePerRequestFilter {
     private final AppUserRepository userRepository;
     private final AppUserDetailsService userDetailsService;
     private final ApplicationEventPublisher events;
+
     private final SecurityContextRepository contextRepository = new HttpSessionSecurityContextRepository();
+
+    public SessionRefreshFilter(AppUserRepository userRepository,
+                                AppUserDetailsService userDetailsService,
+                                ApplicationEventPublisher events) {
+        this.userRepository = userRepository;
+        this.userDetailsService = userDetailsService;
+        this.events = events;
+    }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {

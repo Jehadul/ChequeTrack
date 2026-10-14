@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Edit approval step</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <h1 class="h4 mb-3"><i class="bi bi-person-check"></i> Edit approval step: <span th:text="${form.action.label}">Issue</span></h1>
+
+    <div class="card" style="max-width: 560px">
+        <div class="card-body">
+            <form th:action="@{/setup/approvals/{id}(id=${form.id})}" th:object="${form}" method="post" novalidate>
+                <input type="hidden" th:field="*{version}">
+                <input type="hidden" th:field="*{action}">
+                <div th:replace="~{fragments/forms :: globalErrors}"></div>
+                <div class="row">
+                    <div class="col-4 mb-3">
+                        <label for="stepOrder" class="form-label">Step</label>
+                        <input type="number" th:field="*{stepOrder}" class="form-control" min="1" max="9"
+                               th:classappend="${#fields.hasErrors('stepOrder')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{stepOrder}"></div>
+                    </div>
+                    <div class="col-8 mb-3">
+                        <label for="minAmount" class="form-label">From amount (Tk)</label>
+                        <input type="number" th:field="*{minAmount}" class="form-control" min="0" step="0.01"
+                               th:classappend="${#fields.hasErrors('minAmount')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{minAmount}"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="approverRoleId" class="form-label">Approver role</label>
+                    <select th:field="*{approverRoleId}" class="form-select" th:classappend="${#fields.hasErrors('approverRoleId')} ? 'is-invalid'">
+                        <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.name}">Role</option>
+                    </select>
+                    <div class="invalid-feedback" th:errors="*{approverRoleId}"></div>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>
+                <a th:href="@{/setup/approvals}" class="btn btn-outline-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

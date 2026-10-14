@@ -18,7 +18,6 @@ import com.chequetrack.security.service.AccountService;
 import com.chequetrack.security.service.AppUserPrincipal;
 import com.chequetrack.security.service.CurrentUser;
 import com.chequetrack.security.service.NewUserAccount;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -40,7 +39,6 @@ import java.util.stream.Collectors;
  * so they cannot lock themselves out by mistake.
  */
 @Service
-@RequiredArgsConstructor
 public class UserManagementService {
 
     private final AppUserRepository userRepository;
@@ -49,6 +47,20 @@ public class UserManagementService {
     private final AccountService accountService;
     private final Clock clock;
     private final ApplicationEventPublisher events;
+
+    public UserManagementService(AppUserRepository userRepository,
+                                 RoleRepository roleRepository,
+                                 BranchRepository branchRepository,
+                                 AccountService accountService,
+                                 Clock clock,
+                                 ApplicationEventPublisher events) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.branchRepository = branchRepository;
+        this.accountService = accountService;
+        this.clock = clock;
+        this.events = events;
+    }
 
     static final String ENTITY = "User";
     static final String STATUS_ACTIVE = "ACTIVE";

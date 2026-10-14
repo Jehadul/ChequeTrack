@@ -134,15 +134,16 @@ Acceptance test: `bash scripts/e2e/m3-audit.sh` (39 checks; run `m2-authorizatio
 **Proposal ref:** 4.1
 **Demo:** the Administrator sets up a bank, a company account, a customer, a supplier, reason lists and approval limits.
 
-- [ ] `BranchScopedEntity` base class + Hibernate filter enabled for every transaction (carried over from M2), tested with the first branch-scoped table
-- [ ] **Bank list:** banks, branches and routing numbers (for cheques the company receives)
-- [ ] **Company bank accounts** (the accounts the company issues cheques from)
-- [ ] **Customers and suppliers** (parties)
-- [ ] **Settings:** cheque validity (180 days), reminder lead days, maximum number of defers, low-stock level
-- [ ] **Reason lists:** bounce, cancel, void and defer reasons
-- [ ] **Approval limits:** which role may approve a void, reprint, defer or write-off, and up to what amount
-- [ ] **Multi-level approval for issuing cheques:** approval steps by amount, e.g. above X needs an Accounts Manager and above Y needs a second approver *(README)*
-- [ ] Basic **invoice, payment and receipt** records so cheques can link to them (only what the links need; full accounting is out of scope)
+- [x] `BranchScopedEntity` base class + Hibernate filter enabled for every transaction (carried over from M2), checked with company bank accounts and invoices
+- [x] **Bank list:** banks, branches and 9-digit routing numbers (20 Bangladeshi banks seeded by name; routing numbers entered on screen)
+- [x] **Company bank accounts** (the accounts the company issues cheques from), operated by one branch each
+- [x] **Customers and suppliers** (parties), with search and paging
+- [x] **Settings:** cheque validity (180 days), near-expiry warning, reminder lead days, maximum defers, low-stock level, bounce-notice days (NI Act s.138)
+- [x] **Reason lists:** bounce, cancel, void, defer, stop payment, return and replace reasons (seeded; deactivated, never deleted)
+- [x] **Approval limits:** approver role per action, applying from an amount; preview "who must approve this amount?" (enforced in M7)
+- [x] **Multi-level approval for issuing cheques:** steps by amount, e.g. Accounts Manager from 0, plus Administrator from 5,00,000 *(README)*
+- [x] **Customer invoices and supplier bills** that cheques settle; cancel with a reason (status history). Receipts and payments are created by the cheque flows in M8/M9
+- [x] Amounts shown with Bangladeshi grouping (1,25,000.00)
 
 ## M5. Attachments / document management
 

@@ -8,7 +8,6 @@ import com.chequetrack.security.service.PasswordPolicyService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContext;
@@ -27,13 +26,21 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 /** The logged-in user's own account. */
 @Controller
 @RequestMapping("/account")
-@RequiredArgsConstructor
 public class AccountController {
 
     private final AccountService accountService;
     private final AppUserDetailsService userDetailsService;
     private final PasswordPolicyService passwordPolicy;
+
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
+
+    public AccountController(AccountService accountService,
+                             AppUserDetailsService userDetailsService,
+                             PasswordPolicyService passwordPolicy) {
+        this.accountService = accountService;
+        this.userDetailsService = userDetailsService;
+        this.passwordPolicy = passwordPolicy;
+    }
 
     @ModelAttribute("passwordRules")
     public String passwordRules() {

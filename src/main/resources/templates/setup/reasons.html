@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Reason lists</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <h1 class="h4 mb-3"><i class="bi bi-list-check"></i> Reason lists</h1>
+    <p class="text-secondary small">Users pick a reason when a cheque bounces, is voided, deferred and so on. Reasons are deactivated, never deleted, because past records refer to them.</p>
+
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card mb-3" th:each="g : ${groups}" th:id="${g.key}">
+                <div class="card-header bg-white fw-semibold" th:text="${g.key.label} + ' reasons'">Bounce reasons</div>
+                <table class="table table-sm align-middle mb-0">
+                    <tbody>
+                    <tr th:each="r : ${g.value}" th:classappend="${!r.active} ? 'text-secondary'">
+                        <td style="width: 6rem"><code th:text="${r.code}">CODE</code></td>
+                        <td th:text="${r.description}">Description</td>
+                        <td style="width: 5rem"><span th:unless="${r.active}" class="badge text-bg-secondary">Inactive</span></td>
+                        <td class="text-end text-nowrap" style="width: 7rem">
+                            <a th:href="@{/setup/reasons/{id}/edit(id=${r.id})}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil"></i></a>
+                            <form th:if="${r.active}" th:action="@{/setup/reasons/{id}/deactivate(id=${r.id})}" method="post" class="d-inline">
+                                <button class="btn btn-outline-danger btn-sm" type="submit" title="Deactivate"><i class="bi bi-slash-circle"></i></button>
+                            </form>
+                            <form th:unless="${r.active}" th:action="@{/setup/reasons/{id}/activate(id=${r.id})}" method="post" class="d-inline">
+                                <button class="btn btn-outline-success btn-sm" type="submit" title="Activate"><i class="bi bi-check-circle"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(g.value)}">
+                        <td colspan="4" class="text-secondary small">No reasons yet.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card position-sticky" style="top: 1rem">
+                <div class="card-header bg-white fw-semibold">Add a reason</div>
+                <div class="card-body">
+                    <form th:action="@{/setup/reasons}" th:object="${form}" method="post" novalidate>
+                        <div th:replace="~{fragments/forms :: globalErrors}"></div>
+                        <div class="mb-2">
+                            <label for="reasonType" class="form-label small">List</label>
+                            <select th:field="*{reasonType}" class="form-select form-select-sm">
+                                <option th:each="t : ${reasonTypes}" th:value="${t}" th:text="${t.label}">Bounce</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label for="code" class="form-label small">Code <span class="text-danger">*</span></label>
+                            <input type="text" th:field="*{code}" class="form-control form-control-sm text-uppercase" maxlength="20"
+                                   th:classappend="${#fields.hasErrors('code')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:errors="*{code}"></div>
+                        </div>
+                        <div class="mb-2">
+                            <label for="description" class="form-label small">Description <span class="text-danger">*</span></label>
+                            <input type="text" th:field="*{description}" class="form-control form-control-sm" maxlength="200"
+                                   th:classappend="${#fields.hasErrors('description')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:errors="*{description}"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="sortOrder" class="form-label small">Order</label>
+                            <input type="number" th:field="*{sortOrder}" class="form-control form-control-sm" min="0" max="999">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-plus-lg"></i> Add</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

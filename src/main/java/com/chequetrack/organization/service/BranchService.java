@@ -11,7 +11,6 @@ import com.chequetrack.organization.repository.BranchRepository;
 import com.chequetrack.security.repository.AppUserRepository;
 import com.chequetrack.security.service.AppUserPrincipal;
 import com.chequetrack.security.service.CurrentUser;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -24,12 +23,19 @@ import java.util.List;
  * the branches assigned to them; anything else is reported as not found.
  */
 @Service
-@RequiredArgsConstructor
 public class BranchService {
 
     private final BranchRepository branchRepository;
     private final AppUserRepository userRepository;
     private final ApplicationEventPublisher events;
+
+    public BranchService(BranchRepository branchRepository,
+                         AppUserRepository userRepository,
+                         ApplicationEventPublisher events) {
+        this.branchRepository = branchRepository;
+        this.userRepository = userRepository;
+        this.events = events;
+    }
 
     /** Branches the current user may see. */
     @Transactional(readOnly = true)

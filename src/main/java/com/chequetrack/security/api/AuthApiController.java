@@ -4,7 +4,6 @@ import com.chequetrack.security.service.AppUserPrincipal;
 import com.chequetrack.security.service.JwtTokenService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,11 +18,15 @@ import org.springframework.web.bind.annotation.RestController;
 /** API login: exchange username and password for a bearer token. */
 @RestController
 @RequestMapping("/api/auth")
-@RequiredArgsConstructor
 public class AuthApiController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtTokenService tokenService;
+
+    public AuthApiController(AuthenticationManager authenticationManager, JwtTokenService tokenService) {
+        this.authenticationManager = authenticationManager;
+        this.tokenService = tokenService;
+    }
 
     @PostMapping("/login")
     public TokenResponse login(@Valid @RequestBody LoginRequest request) {

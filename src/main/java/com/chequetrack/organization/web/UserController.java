@@ -8,7 +8,6 @@ import com.chequetrack.organization.service.RoleService;
 import com.chequetrack.organization.service.UserManagementService;
 import com.chequetrack.organization.service.UserManagementService.CreatedUser;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,7 +22,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/admin/users")
-@RequiredArgsConstructor
 public class UserController {
 
     private static final String FORM = "admin/users/form";
@@ -31,6 +29,12 @@ public class UserController {
     private final UserManagementService userService;
     private final RoleService roleService;
     private final BranchService branchService;
+
+    public UserController(UserManagementService userService, RoleService roleService, BranchService branchService) {
+        this.userService = userService;
+        this.roleService = roleService;
+        this.branchService = branchService;
+    }
 
     @GetMapping
     public String list(Model model) {

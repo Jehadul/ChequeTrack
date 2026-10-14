@@ -13,7 +13,6 @@ import com.chequetrack.organization.repository.PermissionRepository;
 import com.chequetrack.organization.repository.RoleRepository;
 import com.chequetrack.security.repository.AppUserRepository;
 import com.chequetrack.security.service.CurrentUser;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -36,13 +35,22 @@ import java.util.stream.Collectors;
  * </ul>
  */
 @Service
-@RequiredArgsConstructor
 public class RoleService {
 
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
     private final AppUserRepository userRepository;
     private final ApplicationEventPublisher events;
+
+    public RoleService(RoleRepository roleRepository,
+                       PermissionRepository permissionRepository,
+                       AppUserRepository userRepository,
+                       ApplicationEventPublisher events) {
+        this.roleRepository = roleRepository;
+        this.permissionRepository = permissionRepository;
+        this.userRepository = userRepository;
+        this.events = events;
+    }
 
     /** All roles of the company; also used to fill the role list on the user form. */
     @Transactional(readOnly = true)

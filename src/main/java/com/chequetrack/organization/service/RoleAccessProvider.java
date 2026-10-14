@@ -3,7 +3,6 @@ package com.chequetrack.organization.service;
 import com.chequetrack.organization.repository.RoleRepository;
 import com.chequetrack.security.service.UserAccess;
 import com.chequetrack.security.service.UserAccessProvider;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,10 +10,13 @@ import java.util.Set;
 
 /** Supplies role and permissions to the security module at login and on every API call. */
 @Service
-@RequiredArgsConstructor
 public class RoleAccessProvider implements UserAccessProvider {
 
     private final RoleRepository roleRepository;
+
+    public RoleAccessProvider(RoleRepository roleRepository) {
+        this.roleRepository = roleRepository;
+    }
 
     @Override
     @Transactional(readOnly = true)

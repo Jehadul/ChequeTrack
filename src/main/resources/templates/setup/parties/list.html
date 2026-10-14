@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Customers &amp; suppliers</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex align-items-center mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-person-vcard"></i> Customers &amp; suppliers</h1>
+        <a sec:authorize="hasAuthority('PARTY_MANAGE')" th:href="@{/setup/parties/new(type=${role})}"
+           class="btn btn-primary btn-sm ms-auto"><i class="bi bi-plus-lg"></i> New</a>
+    </div>
+
+    <form th:action="@{/setup/parties}" method="get" class="d-flex flex-wrap gap-2 mb-3">
+        <div class="btn-group btn-group-sm" role="group">
+            <a th:href="@{/setup/parties(q=${q})}" class="btn" th:classappend="${role == null} ? 'btn-primary' : 'btn-outline-primary'">All</a>
+            <a th:href="@{/setup/parties(role='CUSTOMER', q=${q})}" class="btn" th:classappend="${role?.name() == 'CUSTOMER'} ? 'btn-primary' : 'btn-outline-primary'">Customers</a>
+            <a th:href="@{/setup/parties(role='SUPPLIER', q=${q})}" class="btn" th:classappend="${role?.name() == 'SUPPLIER'} ? 'btn-primary' : 'btn-outline-primary'">Suppliers</a>
+        </div>
+        <input type="hidden" name="role" th:value="${role}">
+        <div class="input-group input-group-sm" style="max-width: 320px">
+            <input type="search" name="q" class="form-control" placeholder="Search code or name" th:value="${q}">
+            <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+        </div>
+    </form>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Contact</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${parties.content}">
+                    <td class="fw-semibold">
+                        <a sec:authorize="hasAuthority('PARTY_MANAGE')" th:href="@{/setup/parties/{id}/edit(id=${p.id})}" th:text="${p.code}">C001</a>
+                        <span sec:authorize="!hasAuthority('PARTY_MANAGE')" th:text="${p.code}">C001</span>
+                    </td>
+                    <td th:text="${p.name}">Name</td>
+                    <td><span class="badge text-bg-light border" th:text="${p.partyType.label}">Customer</span></td>
+                    <td th:text="${p.contactPerson}"></td>
+                    <td th:text="${p.phone}"></td>
+                    <td><span th:replace="~{fragments/forms :: activeBadge(${p.active})}"></span></td>
+                </tr>
+                <tr th:if="${parties.empty}">
+                    <td colspan="6" class="text-center text-secondary py-4">Nothing found.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex align-items-center small" th:if="${parties.totalPages > 1}">
+            <span class="text-secondary" th:text="|Page ${parties.number + 1} of ${parties.totalPages} · ${parties.totalElements} records|"></span>
+            <nav class="ms-auto">
+                <a th:if="${parties.hasPrevious()}" class="btn btn-outline-secondary btn-sm"
+                   th:href="@{/setup/parties(role=${role}, q=${q}, page=${parties.number - 1})}"><i class="bi bi-chevron-left"></i></a>
+                <a th:if="${parties.hasNext()}" class="btn btn-outline-secondary btn-sm"
+                   th:href="@{/setup/parties(role=${role}, q=${q}, page=${parties.number + 1})}"><i class="bi bi-chevron-right"></i></a>
+            </nav>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

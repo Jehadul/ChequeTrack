@@ -4,7 +4,6 @@ import com.chequetrack.common.exception.BusinessException;
 import com.chequetrack.organization.dto.CompanyForm;
 import com.chequetrack.organization.service.CompanyService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -16,10 +15,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/admin/company")
-@RequiredArgsConstructor
 public class CompanyController {
 
     private final CompanyService companyService;
+
+    public CompanyController(CompanyService companyService) {
+        this.companyService = companyService;
+    }
 
     @GetMapping
     public String edit(Model model) {

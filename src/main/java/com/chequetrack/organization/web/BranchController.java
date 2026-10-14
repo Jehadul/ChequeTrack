@@ -5,7 +5,6 @@ import com.chequetrack.organization.OrganizationPermissions;
 import com.chequetrack.organization.dto.BranchForm;
 import com.chequetrack.organization.service.BranchService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,12 +18,15 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/admin/branches")
-@RequiredArgsConstructor
 public class BranchController {
 
     private static final String FORM = "admin/branches/form";
 
     private final BranchService branchService;
+
+    public BranchController(BranchService branchService) {
+        this.branchService = branchService;
+    }
 
     @GetMapping
     public String list(Model model) {

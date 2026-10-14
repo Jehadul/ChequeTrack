@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Settings</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <h1 class="h4 mb-3"><i class="bi bi-sliders"></i> Cheque settings</h1>
+
+    <div class="card" style="max-width: 760px">
+        <div class="card-body">
+            <form th:action="@{/setup/settings}" th:object="${form}" method="post" novalidate>
+                <input type="hidden" th:field="*{version}">
+                <div th:replace="~{fragments/forms :: globalErrors}"></div>
+                <div th:if="${#fields.hasErrors('warningBeforeExpiry')}" class="alert alert-danger py-2" th:errors="*{warningBeforeExpiry}"></div>
+
+                <h2 class="h6 text-secondary text-uppercase small">Validity</h2>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="chequeValidityDays" class="form-label">Cheque valid for (days)</label>
+                        <input type="number" th:field="*{chequeValidityDays}" class="form-control" min="1" max="365"
+                               th:classappend="${#fields.hasErrors('chequeValidityDays')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{chequeValidityDays}"></div>
+                        <div class="form-text">Bangladesh: six months (180 days) from the cheque date.</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="nearExpiryDays" class="form-label">Warn before expiry (days)</label>
+                        <input type="number" th:field="*{nearExpiryDays}" class="form-control" min="0" max="90"
+                               th:classappend="${#fields.hasErrors('nearExpiryDays')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{nearExpiryDays}"></div>
+                    </div>
+                </div>
+
+                <h2 class="h6 text-secondary text-uppercase small">Reminders and limits</h2>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="reminderLeadDays" class="form-label">Reminder lead (days)</label>
+                        <input type="number" th:field="*{reminderLeadDays}" class="form-control" min="0" max="30"
+                               th:classappend="${#fields.hasErrors('reminderLeadDays')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{reminderLeadDays}"></div>
+                        <div class="form-text">Email cheques due within this many days.</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="maxDefers" class="form-label">Maximum defers per cheque</label>
+                        <input type="number" th:field="*{maxDefers}" class="form-control" min="0" max="12"
+                               th:classappend="${#fields.hasErrors('maxDefers')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{maxDefers}"></div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="lowStockLeaves" class="form-label">Low-stock alert (unused leaves)</label>
+                        <input type="number" th:field="*{lowStockLeaves}" class="form-control" min="0" max="500"
+                               th:classappend="${#fields.hasErrors('lowStockLeaves')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{lowStockLeaves}"></div>
+                    </div>
+                </div>
+
+                <h2 class="h6 text-secondary text-uppercase small">Bounced cheques</h2>
+                <div class="mb-3" style="max-width: 340px">
+                    <label for="bounceNoticeDays" class="form-label">Legal notice deadline (days after bounce)</label>
+                    <input type="number" th:field="*{bounceNoticeDays}" class="form-control" min="1" max="180"
+                           th:classappend="${#fields.hasErrors('bounceNoticeDays')} ? 'is-invalid'">
+                    <div class="invalid-feedback" th:errors="*{bounceNoticeDays}"></div>
+                    <div class="form-text">Negotiable Instruments Act 1881, section 138.</div>
+                </div>
+
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>
+            </form>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

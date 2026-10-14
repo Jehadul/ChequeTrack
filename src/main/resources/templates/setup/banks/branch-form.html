@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Edit bank branch</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <h1 class="h4 mb-3"><i class="bi bi-bank"></i> Edit branch of <span th:text="${bank.name}">Bank</span></h1>
+
+    <div class="card" style="max-width: 720px">
+        <div class="card-body">
+            <form th:action="@{/setup/banks/branches/{id}(id=${form.id})}" th:object="${form}" method="post" novalidate>
+                <input type="hidden" th:field="*{version}">
+                <div th:replace="~{fragments/forms :: globalErrors}"></div>
+                <div class="row">
+                    <div class="col-md-7 mb-3">
+                        <label for="name" class="form-label">Branch name <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{name}" class="form-control" maxlength="150"
+                               th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{name}"></div>
+                    </div>
+                    <div class="col-md-5 mb-3">
+                        <label for="routingNumber" class="form-label">Routing number <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{routingNumber}" class="form-control font-monospace" maxlength="9"
+                               inputmode="numeric" th:classappend="${#fields.hasErrors('routingNumber')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{routingNumber}"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-5 mb-3">
+                        <label for="district" class="form-label">District</label>
+                        <input type="text" th:field="*{district}" class="form-control" maxlength="50">
+                    </div>
+                    <div class="col-md-7 mb-3">
+                        <label for="address" class="form-label">Address</label>
+                        <input type="text" th:field="*{address}" class="form-control" maxlength="300">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>
+                <a th:href="@{/setup/banks/{id}(id=${bank.id})}" class="btn btn-outline-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

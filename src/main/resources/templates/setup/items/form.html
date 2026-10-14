@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="(${form.id} ? 'Edit ' : 'New ') + ${itemType.label.toLowerCase()}">Invoice</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <h1 class="h4 mb-3" th:text="(${form.id} ? 'Edit ' : 'New ') + (${itemType.name() == 'INVOICE'} ? 'customer invoice' : 'supplier bill')">New invoice</h1>
+
+    <div class="card" style="max-width: 820px">
+        <div class="card-body">
+            <form th:action="${form.id} ? @{/setup/{k}/{id}(k=${kind}, id=${form.id})} : @{/setup/{k}(k=${kind})}"
+                  th:object="${form}" method="post" novalidate>
+                <input type="hidden" th:field="*{version}">
+                <div th:replace="~{fragments/forms :: globalErrors}"></div>
+                <div th:if="${#fields.hasErrors('dueDateValid')}" class="alert alert-danger py-2" th:errors="*{dueDateValid}"></div>
+
+                <div class="row">
+                    <div class="col-md-8 mb-3">
+                        <label for="partyId" class="form-label" th:text="${itemType.name() == 'INVOICE'} ? 'Customer' : 'Supplier'">Party</label>
+                        <select th:field="*{partyId}" class="form-select" th:classappend="${#fields.hasErrors('partyId')} ? 'is-invalid'">
+                            <option value="">Choose…</option>
+                            <option th:each="p : ${parties}" th:value="${p.id}" th:text="${p.label}">Party</option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{partyId}"></div>
+                        <div class="form-text" th:if="${#lists.isEmpty(parties)}">
+                            None yet. Add one under <a th:href="@{/setup/parties/new}">Customers &amp; suppliers</a>.
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="number" class="form-label">Number <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{number}" class="form-control text-uppercase" maxlength="30"
+                               th:classappend="${#fields.hasErrors('number')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{number}"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="itemDate" class="form-label">Date <span class="text-danger">*</span></label>
+                        <input type="date" th:field="*{itemDate}" class="form-control"
+                               th:classappend="${#fields.hasErrors('itemDate')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{itemDate}"></div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="dueDate" class="form-label">Due date</label>
+                        <input type="date" th:field="*{dueDate}" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="amount" class="form-label">Amount (Tk) <span class="text-danger">*</span></label>
+                        <input type="number" th:field="*{amount}" class="form-control text-end" min="0.01" step="0.01"
+                               th:classappend="${#fields.hasErrors('amount')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{amount}"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-8 mb-3">
+                        <label for="narration" class="form-label">Narration</label>
+                        <input type="text" th:field="*{narration}" class="form-control" maxlength="300">
+                    </div>
+                    <div class="col-md-4 mb-3" th:if="${form.id == null}">
+                        <label for="branchId" class="form-label">Branch</label>
+                        <select th:field="*{branchId}" class="form-select">
+                            <option th:each="b : ${branches}" th:value="${b.id}" th:text="${b.label}">HO</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>
+                <a th:href="${form.id} ? @{/setup/{k}/{id}(k=${kind}, id=${form.id})} : @{/setup/{k}(k=${kind})}" class="btn btn-outline-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

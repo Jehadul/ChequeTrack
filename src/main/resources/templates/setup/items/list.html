@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="${itemType.label} + 's'">Invoices</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex align-items-center mb-3">
+        <h1 class="h4 mb-0">
+            <i class="bi" th:classappend="${itemType.name() == 'INVOICE'} ? 'bi-receipt' : 'bi-file-earmark-text'"></i>
+            <span th:text="${itemType.name() == 'INVOICE'} ? 'Customer invoices' : 'Supplier bills'">Invoices</span>
+        </h1>
+        <a sec:authorize="hasAuthority('INVOICE_MANAGE')" th:href="@{/setup/{k}/new(k=${kind})}"
+           class="btn btn-primary btn-sm ms-auto"><i class="bi bi-plus-lg"></i> New <span th:text="${itemType.label.toLowerCase()}">invoice</span></a>
+    </div>
+
+    <form th:action="@{/setup/{k}(k=${kind})}" method="get" class="d-flex flex-wrap gap-2 mb-3">
+        <div class="btn-group btn-group-sm">
+            <a th:href="@{/setup/{k}(k=${kind}, q=${q})}" class="btn" th:classappend="${openOnly} ? 'btn-primary' : 'btn-outline-primary'">Open</a>
+            <a th:href="@{/setup/{k}(k=${kind}, q=${q}, openOnly=false)}" class="btn" th:classappend="${!openOnly} ? 'btn-primary' : 'btn-outline-primary'">All</a>
+        </div>
+        <input type="hidden" name="openOnly" th:value="${openOnly}">
+        <div class="input-group input-group-sm" style="max-width: 320px">
+            <input type="search" name="q" class="form-control" placeholder="Search number or name" th:value="${q}">
+            <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+        </div>
+    </form>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Number</th>
+                    <th>Date</th>
+                    <th th:text="${itemType.name() == 'INVOICE'} ? 'Customer' : 'Supplier'">Party</th>
+                    <th>Due</th>
+                    <th class="text-end">Amount</th>
+                    <th class="text-end">Outstanding</th>
+                    <th>Branch</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="i : ${items.content}">
+                    <td class="fw-semibold"><a th:href="@{/setup/{k}/{id}(k=${kind}, id=${i.id})}" th:text="${i.number}">INV-1</a></td>
+                    <td th:text="${@displayFormat.date(i.itemDate)}">01/01/2026</td>
+                    <td th:text="${i.party.name}">Party</td>
+                    <td th:text="${@displayFormat.date(i.dueDate)}"></td>
+                    <td class="amount" th:text="${@displayFormat.amount(i.amount)}">1,00,000.00</td>
+                    <td class="amount" th:text="${@displayFormat.amount(i.outstanding)}">1,00,000.00</td>
+                    <td><span class="badge text-bg-light border" th:text="${branchCodes[i.branchId]}">HO</span></td>
+                    <td th:insert="~{fragments/forms :: itemStatus(${i.status})}"></td>
+                </tr>
+                <tr th:if="${items.empty}">
+                    <td colspan="8" class="text-center text-secondary py-4">Nothing found.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex align-items-center small" th:if="${items.totalPages > 1}">
+            <span class="text-secondary" th:text="|Page ${items.number + 1} of ${items.totalPages} · ${items.totalElements} records|"></span>
+            <nav class="ms-auto">
+                <a th:if="${items.hasPrevious()}" class="btn btn-outline-secondary btn-sm"
+                   th:href="@{/setup/{k}(k=${kind}, q=${q}, openOnly=${openOnly}, page=${items.number - 1})}"><i class="bi bi-chevron-left"></i></a>
+                <a th:if="${items.hasNext()}" class="btn btn-outline-secondary btn-sm"
+                   th:href="@{/setup/{k}(k=${kind}, q=${q}, openOnly=${openOnly}, page=${items.number + 1})}"><i class="bi bi-chevron-right"></i></a>
+            </nav>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

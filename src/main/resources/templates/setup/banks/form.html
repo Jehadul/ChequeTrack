@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="${form.id} ? 'Edit bank' : 'New bank'">Bank</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <h1 class="h4 mb-3"><i class="bi bi-bank"></i> <span th:text="${form.id} ? 'Edit bank' : 'New bank'">Bank</span></h1>
+
+    <div class="card" style="max-width: 720px">
+        <div class="card-body">
+            <form th:action="${form.id} ? @{/setup/banks/{id}(id=${form.id})} : @{/setup/banks}"
+                  th:object="${form}" method="post" novalidate>
+                <input type="hidden" th:field="*{version}">
+                <div th:replace="~{fragments/forms :: globalErrors}"></div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="code" class="form-label">Code <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{code}" class="form-control text-uppercase" maxlength="20"
+                               th:classappend="${#fields.hasErrors('code')} ? 'is-invalid'" th:readonly="${form.id != null}">
+                        <div class="invalid-feedback" th:errors="*{code}"></div>
+                    </div>
+                    <div class="col-md-8 mb-3">
+                        <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{name}" class="form-control" maxlength="150"
+                               th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{name}"></div>
+                    </div>
+                </div>
+                <div class="mb-3" style="max-width: 240px">
+                    <label for="swiftCode" class="form-label">SWIFT code</label>
+                    <input type="text" th:field="*{swiftCode}" class="form-control text-uppercase" maxlength="11"
+                           th:classappend="${#fields.hasErrors('swiftCode')} ? 'is-invalid'">
+                    <div class="invalid-feedback" th:errors="*{swiftCode}"></div>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>
+                <a th:href="${form.id} ? @{/setup/banks/{id}(id=${form.id})} : @{/setup/banks}" class="btn btn-outline-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

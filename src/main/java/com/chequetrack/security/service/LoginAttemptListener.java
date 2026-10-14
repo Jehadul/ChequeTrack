@@ -3,7 +3,6 @@ package com.chequetrack.security.service;
 import com.chequetrack.common.event.AuditEvent;
 import com.chequetrack.security.config.SecurityProperties;
 import com.chequetrack.security.repository.AppUserRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
@@ -25,13 +24,22 @@ import java.time.Instant;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class LoginAttemptListener {
 
     private final AppUserRepository userRepository;
     private final SecurityProperties properties;
     private final Clock clock;
     private final ApplicationEventPublisher events;
+
+    public LoginAttemptListener(AppUserRepository userRepository,
+                                SecurityProperties properties,
+                                Clock clock,
+                                ApplicationEventPublisher events) {
+        this.userRepository = userRepository;
+        this.properties = properties;
+        this.clock = clock;
+        this.events = events;
+    }
 
     @Transactional
     @EventListener

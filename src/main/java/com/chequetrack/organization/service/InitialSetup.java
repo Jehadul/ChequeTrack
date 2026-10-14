@@ -12,7 +12,6 @@ import com.chequetrack.security.domain.AppUser;
 import com.chequetrack.security.repository.AppUserRepository;
 import com.chequetrack.security.service.AccountService;
 import com.chequetrack.security.service.NewUserAccount;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -28,7 +27,6 @@ import java.util.Set;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class InitialSetup implements ApplicationRunner {
 
     private final AppUserRepository userRepository;
@@ -38,6 +36,22 @@ public class InitialSetup implements ApplicationRunner {
     private final AccountService accountService;
     private final UserManagementService userManagementService;
     private final SecurityProperties properties;
+
+    public InitialSetup(AppUserRepository userRepository,
+                        CompanyRepository companyRepository,
+                        BranchRepository branchRepository,
+                        RoleRepository roleRepository,
+                        AccountService accountService,
+                        UserManagementService userManagementService,
+                        SecurityProperties properties) {
+        this.userRepository = userRepository;
+        this.companyRepository = companyRepository;
+        this.branchRepository = branchRepository;
+        this.roleRepository = roleRepository;
+        this.accountService = accountService;
+        this.userManagementService = userManagementService;
+        this.properties = properties;
+    }
 
     @Override
     @Transactional

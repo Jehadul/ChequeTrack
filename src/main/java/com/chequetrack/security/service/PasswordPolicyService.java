@@ -1,7 +1,6 @@
 package com.chequetrack.security.service;
 
 import com.chequetrack.security.config.SecurityProperties;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -9,10 +8,13 @@ import java.util.List;
 
 /** Checks a new password against the configured strength rules. */
 @Service
-@RequiredArgsConstructor
 public class PasswordPolicyService {
 
     private final SecurityProperties properties;
+
+    public PasswordPolicyService(SecurityProperties properties) {
+        this.properties = properties;
+    }
 
     /** @return the broken rules, empty when the password is acceptable */
     public List<String> validate(String password, String username) {

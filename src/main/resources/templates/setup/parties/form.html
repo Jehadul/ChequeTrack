@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="${form.id} ? 'Edit customer/supplier' : 'New customer/supplier'">Party</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-person-vcard"></i>
+            <span th:text="${form.id} ? 'Edit customer/supplier' : 'New customer/supplier'">Party</span></h1>
+        <th:block th:if="${party}">
+            <span th:replace="~{fragments/forms :: activeBadge(${party.active})}"></span>
+            <form th:if="${party.active}" th:action="@{/setup/parties/{id}/deactivate(id=${party.id})}" method="post" class="ms-auto">
+                <button class="btn btn-outline-danger btn-sm" type="submit">Deactivate</button>
+            </form>
+            <form th:unless="${party.active}" th:action="@{/setup/parties/{id}/activate(id=${party.id})}" method="post" class="ms-auto">
+                <button class="btn btn-outline-success btn-sm" type="submit">Activate</button>
+            </form>
+        </th:block>
+    </div>
+
+    <div class="card" style="max-width: 820px">
+        <div class="card-body">
+            <form th:action="${form.id} ? @{/setup/parties/{id}(id=${form.id})} : @{/setup/parties}"
+                  th:object="${form}" method="post" novalidate>
+                <input type="hidden" th:field="*{version}">
+                <div th:replace="~{fragments/forms :: globalErrors}"></div>
+
+                <div class="mb-3">
+                    <span class="form-label d-block">Type <span class="text-danger">*</span></span>
+                    <div class="form-check form-check-inline" th:each="t : ${partyTypes}">
+                        <input class="form-check-input" type="radio" th:field="*{partyType}" th:value="${t}">
+                        <label class="form-check-label" th:for="${#ids.prev('partyType')}" th:text="${t.label}">Customer</label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label for="code" class="form-label">Code <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{code}" class="form-control text-uppercase" maxlength="20"
+                               th:classappend="${#fields.hasErrors('code')} ? 'is-invalid'" th:readonly="${form.id != null}">
+                        <div class="invalid-feedback" th:errors="*{code}"></div>
+                    </div>
+                    <div class="col-md-9 mb-3">
+                        <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{name}" class="form-control" maxlength="150"
+                               th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{name}"></div>
+                        <div class="form-text">For suppliers this is the payee name printed on cheques.</div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="contactPerson" class="form-label">Contact person</label>
+                        <input type="text" th:field="*{contactPerson}" class="form-control" maxlength="100">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="phone" class="form-label">Phone</label>
+                        <input type="text" th:field="*{phone}" class="form-control" maxlength="50">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" th:field="*{email}" class="form-control" maxlength="150"
+                               th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{email}"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-8 mb-3">
+                        <label for="address" class="form-label">Address</label>
+                        <input type="text" th:field="*{address}" class="form-control" maxlength="300">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="tin" class="form-label">TIN</label>
+                        <input type="text" th:field="*{tin}" class="form-control" maxlength="15" inputmode="numeric"
+                               th:classappend="${#fields.hasErrors('tin')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{tin}"></div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>
+                <a th:href="@{/setup/parties}" class="btn btn-outline-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

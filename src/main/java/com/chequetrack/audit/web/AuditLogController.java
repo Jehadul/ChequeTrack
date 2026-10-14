@@ -4,7 +4,6 @@ import com.chequetrack.audit.AuditPermissions;
 import com.chequetrack.audit.domain.AuditLogEntry;
 import com.chequetrack.audit.service.AuditQueryService;
 import com.chequetrack.audit.service.AuditQueryService.AuditFilter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,11 +18,14 @@ import java.time.LocalDate;
 /** Read-only, filterable audit log for administrators and auditors. */
 @Controller
 @RequestMapping("/audit")
-@RequiredArgsConstructor
 @PreAuthorize("hasAuthority('" + AuditPermissions.AUDIT_VIEW + "')")
 public class AuditLogController {
 
     private final AuditQueryService auditQueryService;
+
+    public AuditLogController(AuditQueryService auditQueryService) {
+        this.auditQueryService = auditQueryService;
+    }
 
     @GetMapping
     public String log(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,

@@ -8,7 +8,6 @@ import com.chequetrack.organization.domain.Company;
 import com.chequetrack.organization.dto.CompanyForm;
 import com.chequetrack.organization.repository.CompanyRepository;
 import com.chequetrack.security.service.CurrentUser;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -16,11 +15,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 /** The logged-in user's own company. */
 @Service
-@RequiredArgsConstructor
 public class CompanyService {
 
     private final CompanyRepository companyRepository;
     private final ApplicationEventPublisher events;
+
+    public CompanyService(CompanyRepository companyRepository, ApplicationEventPublisher events) {
+        this.companyRepository = companyRepository;
+        this.events = events;
+    }
 
     @Transactional(readOnly = true)
     public Company current() {

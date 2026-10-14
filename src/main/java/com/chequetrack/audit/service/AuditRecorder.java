@@ -12,7 +12,6 @@ import com.chequetrack.security.repository.AppUserRepository;
 import com.chequetrack.security.service.AppUserPrincipal;
 import com.chequetrack.security.service.CurrentUser;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.event.AbstractAuthenticationFailureEvent;
@@ -40,7 +39,6 @@ import java.util.Optional;
  * </ul>
  */
 @Component
-@RequiredArgsConstructor
 public class AuditRecorder {
 
     public static final String LOGIN_SUCCESS = "LOGIN_SUCCESS";
@@ -52,6 +50,16 @@ public class AuditRecorder {
     private final StatusHistoryRepository statusHistoryRepository;
     private final AppUserRepository userRepository;
     private final Clock clock;
+
+    public AuditRecorder(AuditLogRepository auditLogRepository,
+                         StatusHistoryRepository statusHistoryRepository,
+                         AppUserRepository userRepository,
+                         Clock clock) {
+        this.auditLogRepository = auditLogRepository;
+        this.statusHistoryRepository = statusHistoryRepository;
+        this.userRepository = userRepository;
+        this.clock = clock;
+    }
 
     // ---- events published by the modules -------------------------------------------------
 

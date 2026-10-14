@@ -1,7 +1,6 @@
 package com.chequetrack.security.service;
 
 import com.chequetrack.security.config.SecurityProperties;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -15,12 +14,17 @@ import java.time.Instant;
 
 /** Issues signed access tokens for the REST API. */
 @Service
-@RequiredArgsConstructor
 public class JwtTokenService {
 
     private final JwtEncoder jwtEncoder;
     private final SecurityProperties properties;
     private final Clock clock;
+
+    public JwtTokenService(JwtEncoder jwtEncoder, SecurityProperties properties, Clock clock) {
+        this.jwtEncoder = jwtEncoder;
+        this.properties = properties;
+        this.clock = clock;
+    }
 
     public IssuedToken issue(AppUserPrincipal user) {
         Instant now = clock.instant();

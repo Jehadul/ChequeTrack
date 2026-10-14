@@ -6,7 +6,6 @@ import com.chequetrack.organization.domain.Role;
 import com.chequetrack.organization.dto.RoleForm;
 import com.chequetrack.organization.service.RoleService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,13 +19,16 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/admin/roles")
-@RequiredArgsConstructor
 @PreAuthorize("hasAuthority('" + OrganizationPermissions.ROLE_MANAGE + "')")
 public class RoleController {
 
     private static final String FORM = "admin/roles/form";
 
     private final RoleService roleService;
+
+    public RoleController(RoleService roleService) {
+        this.roleService = roleService;
+    }
 
     @GetMapping
     public String list(Model model) {

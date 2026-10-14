@@ -1,7 +1,6 @@
 package com.chequetrack.security.web;
 
 import com.chequetrack.security.config.SecurityProperties;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -11,10 +10,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 /** Shows the login form; Spring Security processes the POST. */
 @Controller
-@RequiredArgsConstructor
 public class LoginController {
 
     private final SecurityProperties properties;
+
+    public LoginController(SecurityProperties properties) {
+        this.properties = properties;
+    }
 
     @GetMapping("/login")
     public String login(@RequestParam(required = false) String error,

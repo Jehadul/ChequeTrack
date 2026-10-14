@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Company bank accounts</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex align-items-center mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-safe"></i> Company bank accounts</h1>
+        <a sec:authorize="hasAuthority('BANK_MANAGE')" th:href="@{/setup/accounts/new}"
+           class="btn btn-primary btn-sm ms-auto"><i class="bi bi-plus-lg"></i> New account</a>
+    </div>
+    <p class="text-secondary small">Accounts the company issues cheques from. You see the accounts of your branches only.</p>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Bank &amp; branch</th>
+                    <th>Account number</th>
+                    <th>Account name</th>
+                    <th>Type</th>
+                    <th>Our branch</th>
+                    <th>Status</th>
+                    <th sec:authorize="hasAuthority('BANK_MANAGE')" class="text-end">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="a : ${accounts}">
+                    <td>
+                        <div class="fw-semibold" th:text="${a.bankBranch.bank.name}">Bank</div>
+                        <div class="small text-secondary" th:text="|${a.bankBranch.name} · ${a.bankBranch.routingNumber}|">Branch</div>
+                    </td>
+                    <td class="font-monospace" th:text="${a.accountNumber}">123</td>
+                    <td th:text="${a.accountName}">Name</td>
+                    <td th:text="${a.accountType.label}">Current</td>
+                    <td><span class="badge text-bg-light border" th:text="${branchCodes[a.branchId]}">HO</span></td>
+                    <td><span th:replace="~{fragments/forms :: activeBadge(${a.active})}"></span></td>
+                    <td sec:authorize="hasAuthority('BANK_MANAGE')" class="text-end text-nowrap">
+                        <a th:href="@{/setup/accounts/{id}/edit(id=${a.id})}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil"></i> Edit</a>
+                        <form th:if="${a.active}" th:action="@{/setup/accounts/{id}/deactivate(id=${a.id})}" method="post" class="d-inline">
+                            <button class="btn btn-outline-danger btn-sm" type="submit">Deactivate</button>
+                        </form>
+                        <form th:unless="${a.active}" th:action="@{/setup/accounts/{id}/activate(id=${a.id})}" method="post" class="d-inline">
+                            <button class="btn btn-outline-success btn-sm" type="submit">Activate</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(accounts)}">
+                    <td colspan="7" class="text-center text-secondary py-4">No accounts for your branches.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

@@ -19,6 +19,9 @@
 
     <properties>
         <java.version>17</java.version>
+        <!-- Newer than Spring Boot's default; fixes false "Flexible Constructor Bodies"
+             errors on @RequiredArgsConstructor in the VS Code / Eclipse Java tooling -->
+        <lombok.version>1.18.48</lombok.version>
         <bootstrap.version>5.3.3</bootstrap.version>
         <bootstrap-icons.version>1.11.3</bootstrap-icons.version>
         <jquery.version>3.7.1</jquery.version>

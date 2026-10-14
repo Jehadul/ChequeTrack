@@ -1,6 +1,5 @@
 package com.chequetrack.security.service;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -17,10 +16,13 @@ import org.springframework.stereotype.Component;
  * instead of when the token expires.
  */
 @Component
-@RequiredArgsConstructor
 public class JwtUserAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 
     private final AppUserDetailsService userDetailsService;
+
+    public JwtUserAuthenticationConverter(AppUserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
+    }
 
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {

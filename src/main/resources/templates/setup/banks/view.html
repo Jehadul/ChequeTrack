@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="${bank.name}">Bank</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-bank"></i> <span th:text="${bank.name}">Bank</span></h1>
+        <span class="badge text-bg-light border" th:text="${bank.code}">CODE</span>
+        <span th:replace="~{fragments/forms :: activeBadge(${bank.active})}"></span>
+        <div class="ms-auto d-flex gap-1" sec:authorize="hasAuthority('BANK_MANAGE')">
+            <a th:href="@{/setup/banks/{id}/edit(id=${bank.id})}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil"></i> Edit</a>
+            <form th:if="${bank.active}" th:action="@{/setup/banks/{id}/deactivate(id=${bank.id})}" method="post">
+                <button class="btn btn-outline-danger btn-sm" type="submit">Deactivate</button>
+            </form>
+            <form th:unless="${bank.active}" th:action="@{/setup/banks/{id}/activate(id=${bank.id})}" method="post">
+                <button class="btn btn-outline-success btn-sm" type="submit">Activate</button>
+            </form>
+        </div>
+        <a th:href="@{/setup/banks}" class="btn btn-link btn-sm"><i class="bi bi-arrow-left"></i> All banks</a>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white fw-semibold">Branches</div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Branch</th>
+                            <th>Routing no.</th>
+                            <th>District</th>
+                            <th>Status</th>
+                            <th sec:authorize="hasAuthority('BANK_MANAGE')" class="text-end">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="br : ${branches}">
+                            <td>
+                                <div th:text="${br.name}">Gulshan</div>
+                                <div class="small text-secondary" th:text="${br.address}"></div>
+                            </td>
+                            <td class="font-monospace" th:text="${br.routingNumber}">090261725</td>
+                            <td th:text="${br.district}"></td>
+                            <td><span th:replace="~{fragments/forms :: activeBadge(${br.active})}"></span></td>
+                            <td sec:authorize="hasAuthority('BANK_MANAGE')" class="text-end text-nowrap">
+                                <a th:href="@{/setup/banks/branches/{id}/edit(id=${br.id})}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil"></i></a>
+                                <form th:if="${br.active}" th:action="@{/setup/banks/branches/{id}/deactivate(id=${br.id})}" method="post" class="d-inline">
+                                    <button class="btn btn-outline-danger btn-sm" type="submit" title="Deactivate"><i class="bi bi-slash-circle"></i></button>
+                                </form>
+                                <form th:unless="${br.active}" th:action="@{/setup/banks/branches/{id}/activate(id=${br.id})}" method="post" class="d-inline">
+                                    <button class="btn btn-outline-success btn-sm" type="submit" title="Activate"><i class="bi bi-check-circle"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(branches)}">
+                            <td colspan="5" class="text-center text-secondary py-4">No branches yet.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4" sec:authorize="hasAuthority('BANK_MANAGE')">
+            <div class="card">
+                <div class="card-header bg-white fw-semibold">Add a branch</div>
+                <div class="card-body">
+                    <form th:action="@{/setup/banks/{id}/branches(id=${bank.id})}" th:object="${branchForm}" method="post" novalidate>
+                        <div class="mb-2">
+                            <label for="name" class="form-label small">Branch name <span class="text-danger">*</span></label>
+                            <input type="text" th:field="*{name}" class="form-control form-control-sm" maxlength="150"
+                                   th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:errors="*{name}"></div>
+                        </div>
+                        <div class="mb-2">
+                            <label for="routingNumber" class="form-label small">Routing number <span class="text-danger">*</span></label>
+                            <input type="text" th:field="*{routingNumber}" class="form-control form-control-sm font-monospace"
+                                   maxlength="9" inputmode="numeric" placeholder="9 digits"
+                                   th:classappend="${#fields.hasErrors('routingNumber')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:errors="*{routingNumber}"></div>
+                        </div>
+                        <div class="mb-2">
+                            <label for="district" class="form-label small">District</label>
+                            <input type="text" th:field="*{district}" class="form-control form-control-sm" maxlength="50">
+                        </div>
+                        <div class="mb-3">
+                            <label for="address" class="form-label small">Address</label>
+                            <input type="text" th:field="*{address}" class="form-control form-control-sm" maxlength="300">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-plus-lg"></i> Add branch</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

@@ -8,7 +8,6 @@ import com.chequetrack.security.domain.AppUser;
 import com.chequetrack.security.domain.PasswordHistory;
 import com.chequetrack.security.repository.AppUserRepository;
 import com.chequetrack.security.repository.PasswordHistoryRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Limit;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,7 +21,6 @@ import java.util.List;
 
 /** Creating users and changing or resetting passwords. */
 @Service
-@RequiredArgsConstructor
 public class AccountService {
 
     private static final String TEMP_PASSWORD_CHARS =
@@ -35,7 +33,24 @@ public class AccountService {
     private final SecurityProperties properties;
     private final Clock clock;
     private final ApplicationEventPublisher events;
+
     private final SecureRandom random = new SecureRandom();
+
+    public AccountService(AppUserRepository userRepository,
+                          PasswordHistoryRepository historyRepository,
+                          PasswordEncoder passwordEncoder,
+                          PasswordPolicyService passwordPolicy,
+                          SecurityProperties properties,
+                          Clock clock,
+                          ApplicationEventPublisher events) {
+        this.userRepository = userRepository;
+        this.historyRepository = historyRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.passwordPolicy = passwordPolicy;
+        this.properties = properties;
+        this.clock = clock;
+        this.events = events;
+    }
 
     /** Creates a user with a temporary password that must be changed at first login. */
     @Transactional

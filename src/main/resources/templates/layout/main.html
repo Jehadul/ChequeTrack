@@ -56,6 +56,26 @@
             <a class="nav-link" th:href="@{/}"><i class="bi bi-speedometer2 me-2"></i>Home</a>
             <!-- Each module adds its own menu section here, each link shown only with its permission -->
 
+            <div sec:authorize="hasAnyAuthority('INVOICE_VIEW','PARTY_VIEW')" class="nav-section">Accounts</div>
+            <a sec:authorize="hasAuthority('INVOICE_VIEW')" class="nav-link" th:href="@{/setup/invoices}">
+                <i class="bi bi-receipt me-2"></i>Customer invoices</a>
+            <a sec:authorize="hasAuthority('INVOICE_VIEW')" class="nav-link" th:href="@{/setup/bills}">
+                <i class="bi bi-file-earmark-text me-2"></i>Supplier bills</a>
+            <a sec:authorize="hasAuthority('PARTY_VIEW')" class="nav-link" th:href="@{/setup/parties}">
+                <i class="bi bi-person-vcard me-2"></i>Customers &amp; suppliers</a>
+
+            <div sec:authorize="hasAnyAuthority('BANK_VIEW','SETTINGS_MANAGE')" class="nav-section">Setup</div>
+            <a sec:authorize="hasAuthority('BANK_VIEW')" class="nav-link" th:href="@{/setup/accounts}">
+                <i class="bi bi-safe me-2"></i>Company accounts</a>
+            <a sec:authorize="hasAuthority('BANK_VIEW')" class="nav-link" th:href="@{/setup/banks}">
+                <i class="bi bi-bank me-2"></i>Banks</a>
+            <a sec:authorize="hasAuthority('SETTINGS_MANAGE')" class="nav-link" th:href="@{/setup/settings}">
+                <i class="bi bi-sliders me-2"></i>Settings</a>
+            <a sec:authorize="hasAuthority('SETTINGS_MANAGE')" class="nav-link" th:href="@{/setup/reasons}">
+                <i class="bi bi-list-check me-2"></i>Reason lists</a>
+            <a sec:authorize="hasAuthority('SETTINGS_MANAGE')" class="nav-link" th:href="@{/setup/approvals}">
+                <i class="bi bi-person-check me-2"></i>Approval rules</a>
+
             <div sec:authorize="hasAnyAuthority('COMPANY_MANAGE','BRANCH_VIEW','USER_VIEW','ROLE_MANAGE')"
                  class="nav-section">Administration</div>
             <a sec:authorize="hasAuthority('COMPANY_MANAGE')" class="nav-link" th:href="@{/admin/company}">
