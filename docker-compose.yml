@@ -30,8 +30,12 @@ services:
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
       # Optional: temporary password for the first admin (empty = random, printed in the log)
       ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD:-}
+      ATTACHMENTS_DIR: /data/attachments
     ports:
       - "8080:8080"
+    volumes:
+      - attachments:/data/attachments
 
 volumes:
   db-data:
+  attachments:

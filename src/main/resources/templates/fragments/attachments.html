@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Attachments panel for any record. Used by the attachments page, and embedded
+  directly in cheque pages from M8 on.
+  Parameters: ownerType, ownerId, attachments (list), canModify, categories.
+-->
+<div th:fragment="panel(ownerType, ownerId, attachments, canModify, categories)" class="card">
+    <div class="card-header bg-white fw-semibold d-flex align-items-center">
+        <i class="bi bi-paperclip me-1"></i> Attachments
+        <span class="badge text-bg-light border ms-2" th:text="${#lists.size(attachments)}">0</span>
+    </div>
+
+    <ul class="list-group list-group-flush">
+        <li class="list-group-item d-flex flex-wrap align-items-center gap-2" th:each="a : ${attachments}">
+            <i class="bi fs-4" th:classappend="${a.contentType == 'application/pdf'} ? 'bi-file-earmark-pdf text-danger' : 'bi-file-earmark-image text-primary'"></i>
+            <div class="me-auto" style="min-width: 0">
+                <div class="text-truncate">
+                    <a th:href="@{/attachments/file/{id}(id=${a.id}, inline=true)}" target="_blank" rel="noopener"
+                       th:text="${a.originalFilename}">file.pdf</a>
+                </div>
+                <div class="small text-secondary">
+                    <span class="badge text-bg-light border" th:text="${a.category.label}">Invoice</span>
+                    <span th:text="${a.sizeLabel}">120 KB</span> ·
+                    <span th:text="${a.createdBy}">user</span> ·
+                    <span th:text="${@displayFormat.ts(a.createdAt)}">time</span>
+                    <span th:if="${a.description}"> · <em th:text="${a.description}"></em></span>
+                </div>
+            </div>
+            <a th:href="@{/attachments/file/{id}(id=${a.id})}" class="btn btn-outline-secondary btn-sm" title="Download">
+                <i class="bi bi-download"></i></a>
+            <form th:if="${canModify}" th:action="@{/attachments/file/{id}/remove(id=${a.id})}" method="post"
+                  onsubmit="return confirm('Remove this attachment from the record?')">
+                <button type="submit" class="btn btn-outline-danger btn-sm" title="Remove"><i class="bi bi-trash"></i></button>
+            </form>
+        </li>
+        <li class="list-group-item text-secondary small" th:if="${#lists.isEmpty(attachments)}">No files attached.</li>
+    </ul>
+
+    <div class="card-body border-top" th:if="${canModify}">
+        <form th:action="@{/attachments/{t}/{id}(t=${ownerType}, id=${ownerId})}" method="post" enctype="multipart/form-data">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label small mb-1" for="file">File <span class="text-secondary">(PDF, JPEG or PNG, max 5 MB)</span></label>
+                    <input type="file" id="file" name="file" class="form-control form-control-sm" required
+                           accept="application/pdf,image/jpeg,image/png">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small mb-1" for="category">Type</label>
+                    <select id="category" name="category" class="form-select form-select-sm">
+                        <option th:each="c : ${categories}" th:value="${c}" th:text="${c.label}">Invoice</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small mb-1" for="description">Description</label>
+                    <input type="text" id="description" name="description" class="form-control form-control-sm" maxlength="300">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm mt-2"><i class="bi bi-upload"></i> Upload</button>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Cheque books</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-journal-bookmark"></i> Cheque books</h1>
+        <a th:href="@{/chequebooks/stock}" class="btn btn-outline-secondary btn-sm ms-auto"><i class="bi bi-bar-chart"></i> Stock</a>
+        <a sec:authorize="hasAuthority('CHEQUEBOOK_MANAGE')" th:href="@{/chequebooks/new(accountId=${accountId})}"
+           class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> New cheque book</a>
+    </div>
+
+    <form th:action="@{/chequebooks}" method="get" class="d-flex flex-wrap gap-2 mb-3">
+        <select name="accountId" class="form-select form-select-sm" style="max-width: 320px">
+            <option value="">All accounts</option>
+            <option th:each="a : ${accounts}" th:value="${a.id}" th:text="${a.label}" th:selected="${a.id == accountId}">Account</option>
+        </select>
+        <select name="status" class="form-select form-select-sm" style="max-width: 180px">
+            <option value="">Any status</option>
+            <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}" th:selected="${s == status}">ACTIVE</option>
+        </select>
+        <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-funnel"></i> Filter</button>
+    </form>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Account</th>
+                    <th>Leaves</th>
+                    <th class="text-end">Unused</th>
+                    <th class="text-end">Used</th>
+                    <th class="text-end">Void</th>
+                    <th>Received</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${rows}">
+                    <td>
+                        <div class="fw-semibold" th:text="${r.book.account.bankBranch.bank.name}">Bank</div>
+                        <div class="small text-secondary font-monospace" th:text="${r.book.account.accountNumber}">123</div>
+                    </td>
+                    <td>
+                        <a class="font-monospace" th:href="@{/chequebooks/{id}(id=${r.book.id})}" th:text="${r.book.rangeLabel}">0001 – 0025</a>
+                        <span class="small text-secondary" th:text="|(${r.book.leafCount})|">(25)</span>
+                    </td>
+                    <td class="text-end" th:text="${r.count('UNUSED')}">0</td>
+                    <td class="text-end" th:text="${r.count('USED')}">0</td>
+                    <td class="text-end" th:text="${r.count('VOID')}">0</td>
+                    <td th:text="${@displayFormat.date(r.book.receivedDate)}"></td>
+                    <td th:insert="~{fragments/forms :: bookStatus(${r.book.status})}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(rows)}">
+                    <td colspan="7" class="text-center text-secondary py-4">No cheque books.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

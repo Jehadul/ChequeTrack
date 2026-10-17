@@ -120,3 +120,24 @@ body {
     width: 1%;
     white-space: nowrap;
 }
+
+/* Cheque leaves grid (chequebook/view.html) */
+.leaf-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+}
+
+.leaf-chip {
+    display: inline-block;
+    padding: .15rem .4rem;
+    border-radius: .25rem;
+    font-size: .75rem;
+    border: 1px solid transparent;
+}
+
+.leaf-UNUSED { background: #e8f5e9; border-color: #a5d6a7; color: #1b5e20; }
+.leaf-ALLOCATED { background: #fff8e1; border-color: #ffe082; color: #7a5b00; }
+.leaf-USED { background: #e3eaf3; border-color: #9fb6d3; color: #1f4e79; }
+.leaf-VOID { background: #fdecea; border-color: #f5a3a3; color: #9b1c1c; text-decoration: line-through; }
+.leaf-CANCELLED, .leaf-LOST { background: #eeeeee; border-color: #cccccc; color: #666666; text-decoration: line-through; }

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="|Cheque book ${d.book.rangeLabel}|">Cheque book</title>
+</head>
+<body>
+<th:block layout:fragment="content" th:with="book=${d.book}, canManage=${#authorization.expression('hasAuthority(''CHEQUEBOOK_MANAGE'')')}">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-journal-bookmark"></i> <span class="font-monospace" th:text="${book.rangeLabel}">range</span></h1>
+        <span th:replace="~{fragments/forms :: bookStatus(${book.status})}"></span>
+        <a th:href="@{/chequebooks(accountId=${book.account.id})}" class="btn btn-link btn-sm ms-auto"><i class="bi bi-arrow-left"></i> Books of this account</a>
+    </div>
+
+    <div th:if="${!#lists.isEmpty(d.skipped)}" class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle"></i>
+        <strong th:text="|${#lists.size(d.skipped)} skipped leaf(s):|">Skipped:</strong>
+        <span class="font-monospace" th:each="l, it : ${d.skipped}" th:text="${l.displayNumber} + (${it.last} ? '' : ', ')">0001</span>.
+        <div class="small">These are still unused although a later leaf was already used or voided. Check whether they are lost or were used without a record.</div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3">Account</dt>
+                        <dd class="col-sm-9" th:text="|${book.account.bankBranch.bank.name}, ${book.account.bankBranch.name} · ${book.account.accountNumber} · ${book.account.accountName}|"></dd>
+                        <dt class="col-sm-3">Leaves</dt>
+                        <dd class="col-sm-9">
+                            <span th:text="${book.leafCount}">25</span> ·
+                            <span class="text-success" th:text="|${d.count('UNUSED')} unused|"></span> ·
+                            <span th:text="|${d.count('USED')} used|"></span> ·
+                            <span class="text-danger" th:text="|${d.count('VOID')} void|"></span>
+                            <span th:if="${d.count('CANCELLED') > 0}" th:text="| · ${d.count('CANCELLED')} cancelled|"></span>
+                            <span th:if="${d.count('LOST') > 0}" class="text-danger" th:text="| · ${d.count('LOST')} lost|"></span>
+                        </dd>
+                        <dt class="col-sm-3">Received</dt>
+                        <dd class="col-sm-9" th:text="${@displayFormat.date(book.receivedDate)}"></dd>
+                        <dt class="col-sm-3">Notes</dt>
+                        <dd class="col-sm-9 mb-0" th:text="${book.notes} ?: '-'"></dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-white fw-semibold d-flex align-items-center">
+                    Leaves
+                    <span class="ms-auto small fw-normal">
+                        <span class="leaf-chip leaf-UNUSED">unused</span>
+                        <span class="leaf-chip leaf-ALLOCATED">allocated</span>
+                        <span class="leaf-chip leaf-USED">used</span>
+                        <span class="leaf-chip leaf-VOID">void</span>
+                        <span class="leaf-chip leaf-CANCELLED">cancelled/lost</span>
+                    </span>
+                </div>
+                <div class="card-body leaf-grid">
+                    <span th:each="l : ${d.leaves}" class="leaf-chip font-monospace" th:classappend="|leaf-${l.status}|"
+                          th:title="|${l.displayNumber}: ${l.status}|" th:text="${l.displayNumber}">0001001</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-white fw-semibold">Activity</div>
+                <div th:replace="~{fragments/history :: auditTable(${auditEntries}, false)}"></div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-3" th:if="${canManage and book.status.name() == 'ACTIVE' and d.count('UNUSED') > 0}">
+                <div class="card-header bg-white fw-semibold">Void an unused leaf</div>
+                <div class="card-body">
+                    <form th:action="@{/chequebooks/leaves/0/void}" method="post" id="voidForm">
+                        <label for="voidLeaf" class="form-label small">Leaf</label>
+                        <select id="voidLeaf" class="form-select form-select-sm mb-2" required>
+                            <option th:each="l : ${d.leaves}" th:if="${l.status.name() == 'UNUSED'}"
+                                    th:value="${l.id}" th:text="${l.displayNumber}">0001</option>
+                        </select>
+                        <label for="reasonId" class="form-label small">Reason <span class="text-danger">*</span></label>
+                        <select id="reasonId" name="reasonId" class="form-select form-select-sm mb-2" required>
+                            <option value="">Choose…</option>
+                            <option th:each="r : ${voidReasons}" th:value="${r.id}" th:text="${r.description}">Damaged</option>
+                        </select>
+                        <input type="text" name="note" class="form-control form-control-sm mb-2" maxlength="200" placeholder="Note (optional)">
+                        <button type="submit" class="btn btn-outline-danger btn-sm w-100"
+                                onclick="return confirm('Void this leaf? It can never be used.')"><i class="bi bi-x-octagon"></i> Void leaf</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mb-3" th:if="${canManage and (book.status.name() == 'ACTIVE' or book.status.name() == 'FINISHED')}">
+                <div class="card-header bg-white fw-semibold">Cancel or report lost</div>
+                <div class="card-body">
+                    <form th:action="@{/chequebooks/{id}/close(id=${book.id})}" method="post"
+                          onsubmit="return confirm('This closes all unused leaves of the book. Continue?')">
+                        <select name="status" class="form-select form-select-sm mb-2">
+                            <option value="CANCELLED">Cancel book</option>
+                            <option value="LOST">Report book lost / stolen</option>
+                        </select>
+                        <input type="text" name="reason" class="form-control form-control-sm mb-2" maxlength="300" required
+                               placeholder="Reason *">
+                        <button type="submit" class="btn btn-outline-danger btn-sm w-100">Confirm</button>
+                    </form>
+                    <div class="form-text">For a lost book, also ask the bank to stop payment on its unused leaves.</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-white fw-semibold">Book history</div>
+                <div class="card-body">
+                    <div th:replace="~{fragments/history :: statusTimeline(${statusHistory})}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block layout:fragment="scripts">
+    <script>
+        // Post to the chosen leaf's URL
+        $('#voidForm').on('submit', function () {
+            this.action = this.action.replace(/\/leaves\/\d+\/void$/, '/leaves/' + $('#voidLeaf').val() + '/void');
+        });
+    </script>
+</th:block>
+</body>
+</html>

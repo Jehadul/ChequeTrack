@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Cheque leaf stock</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex align-items-center mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-bar-chart"></i> Cheque leaf stock</h1>
+        <a th:href="@{/chequebooks}" class="btn btn-link btn-sm ms-auto"><i class="bi bi-arrow-left"></i> Cheque books</a>
+    </div>
+    <p class="text-secondary small">Leaves of active books per account. An account is low on stock when it has fewer unused leaves than the level set under Settings.</p>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Account</th>
+                    <th class="text-end">Active books</th>
+                    <th class="text-end">Unused</th>
+                    <th class="text-end">In use</th>
+                    <th class="text-end">Used</th>
+                    <th class="text-end">Void</th>
+                    <th>Alerts</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="s : ${stock}" th:classappend="${s.lowStock} ? 'table-warning'">
+                    <td>
+                        <div class="fw-semibold" th:text="${s.account.bankBranch.bank.name}">Bank</div>
+                        <div class="small text-secondary"><span class="font-monospace" th:text="${s.account.accountNumber}"></span> · <span th:text="${s.account.accountName}"></span></div>
+                    </td>
+                    <td class="text-end" th:text="${s.activeBooks}">0</td>
+                    <td class="text-end fw-semibold" th:text="${s.unused}">0</td>
+                    <td class="text-end" th:text="${s.allocated}">0</td>
+                    <td class="text-end" th:text="${s.used}">0</td>
+                    <td class="text-end" th:text="${s.voided}">0</td>
+                    <td>
+                        <span th:if="${s.lowStock}" class="badge text-bg-warning" th:text="|Low stock (below ${s.lowStockLevel})|">Low</span>
+                        <span th:if="${s.skipped > 0}" class="badge text-bg-danger" th:text="|${s.skipped} skipped|">skipped</span>
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <a th:href="@{/chequebooks(accountId=${s.account.id})}" class="btn btn-outline-secondary btn-sm">Books</a>
+                        <a sec:authorize="hasAuthority('CHEQUEBOOK_MANAGE')" th:href="@{/chequebooks/new(accountId=${s.account.id})}"
+                           class="btn btn-outline-primary btn-sm"><i class="bi bi-plus-lg"></i></a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(stock)}">
+                    <td colspan="8" class="text-center text-secondary py-4">No active accounts for your branches.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

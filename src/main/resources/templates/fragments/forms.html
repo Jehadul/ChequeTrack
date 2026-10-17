@@ -17,6 +17,11 @@
       th:classappend="${s == 'OPEN'} ? 'text-bg-primary' : (${s == 'PARTLY_SETTLED'} ? 'text-bg-warning' : (${s == 'SETTLED'} ? 'text-bg-success' : 'text-bg-secondary'))"
       th:text="${#strings.replace(s, '_', ' ')}">OPEN</span>
 
+<!-- Cheque book status badge (BookStatus) -->
+<span th:fragment="bookStatus(status)" class="badge" th:with="s=${status.name()}"
+      th:classappend="${s == 'ACTIVE'} ? 'text-bg-success' : (${s == 'FINISHED'} ? 'text-bg-secondary' : 'text-bg-danger')"
+      th:text="${s}">ACTIVE</span>
+
 <!-- User status badges (UserView) -->
 <th:block th:fragment="userStatus(user)">
     <span th:if="${user.enabled}" class="badge text-bg-success">Active</span>

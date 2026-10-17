@@ -56,6 +56,12 @@
             <a class="nav-link" th:href="@{/}"><i class="bi bi-speedometer2 me-2"></i>Home</a>
             <!-- Each module adds its own menu section here, each link shown only with its permission -->
 
+            <div sec:authorize="hasAuthority('CHEQUEBOOK_VIEW')" class="nav-section">Cheques</div>
+            <a sec:authorize="hasAuthority('CHEQUEBOOK_VIEW')" class="nav-link" th:href="@{/chequebooks}">
+                <i class="bi bi-journal-bookmark me-2"></i>Cheque books</a>
+            <a sec:authorize="hasAuthority('CHEQUEBOOK_VIEW')" class="nav-link" th:href="@{/chequebooks/stock}">
+                <i class="bi bi-bar-chart me-2"></i>Leaf stock</a>
+
             <div sec:authorize="hasAnyAuthority('INVOICE_VIEW','PARTY_VIEW')" class="nav-section">Accounts</div>
             <a sec:authorize="hasAuthority('INVOICE_VIEW')" class="nav-link" th:href="@{/setup/invoices}">
                 <i class="bi bi-receipt me-2"></i>Customer invoices</a>

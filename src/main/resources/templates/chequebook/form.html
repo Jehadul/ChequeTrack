@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>New cheque book</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <h1 class="h4 mb-3"><i class="bi bi-journal-bookmark"></i> New cheque book</h1>
+
+    <div class="card" style="max-width: 820px">
+        <div class="card-body">
+            <form th:action="@{/chequebooks}" th:object="${form}" method="post" novalidate id="bookForm">
+                <div th:replace="~{fragments/forms :: globalErrors}"></div>
+                <div th:if="${#fields.hasErrors('widthEnough')}" class="alert alert-danger py-2" th:errors="*{widthEnough}"></div>
+
+                <div class="mb-3">
+                    <label for="accountId" class="form-label">Bank account <span class="text-danger">*</span></label>
+                    <select th:field="*{accountId}" class="form-select" th:classappend="${#fields.hasErrors('accountId')} ? 'is-invalid'">
+                        <option value="">Choose…</option>
+                        <option th:each="a : ${accounts}" th:value="${a.id}"
+                                th:text="|${a.bankBranch.bank.name} · ${a.accountNumber} · ${a.accountName}|">Account</option>
+                    </select>
+                    <div class="invalid-feedback" th:errors="*{accountId}"></div>
+                    <div class="form-text" th:if="${#lists.isEmpty(accounts)}">
+                        No active accounts for your branches. Add one under <a th:href="@{/setup/accounts}">Company accounts</a>.
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-2 mb-3">
+                        <label for="prefix" class="form-label">Series</label>
+                        <input type="text" th:field="*{prefix}" class="form-control text-uppercase" maxlength="10" placeholder="none"
+                               th:classappend="${#fields.hasErrors('prefix')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{prefix}"></div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="firstNumber" class="form-label">First leaf number <span class="text-danger">*</span></label>
+                        <input type="number" th:field="*{firstNumber}" class="form-control" min="1"
+                               th:classappend="${#fields.hasErrors('firstNumber')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{firstNumber}"></div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="leafCount" class="form-label">Number of leaves <span class="text-danger">*</span></label>
+                        <input type="number" th:field="*{leafCount}" class="form-control" min="1" max="500" list="leafCounts"
+                               th:classappend="${#fields.hasErrors('leafCount')} ? 'is-invalid'">
+                        <datalist id="leafCounts"><option value="10"><option value="20"><option value="25"><option value="50"><option value="100"></datalist>
+                        <div class="invalid-feedback" th:errors="*{leafCount}"></div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="numberWidth" class="form-label">Digits <span class="text-danger">*</span></label>
+                        <input type="number" th:field="*{numberWidth}" class="form-control" min="1" max="12"
+                               th:classappend="${#fields.hasErrors('numberWidth')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{numberWidth}"></div>
+                    </div>
+                </div>
+
+                <div class="alert alert-light border py-2 small" id="rangePreview">Leaves: –</div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="receivedDate" class="form-label">Received on <span class="text-danger">*</span></label>
+                        <input type="date" th:field="*{receivedDate}" class="form-control"
+                               th:classappend="${#fields.hasErrors('receivedDate')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{receivedDate}"></div>
+                    </div>
+                    <div class="col-md-8 mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <input type="text" th:field="*{notes}" class="form-control" maxlength="300">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Add book and create leaves</button>
+                <a th:href="@{/chequebooks}" class="btn btn-outline-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</th:block>
+
+<th:block layout:fragment="scripts">
+    <script>
+        // Live preview of the leaf range, e.g. "CA 0001001 – CA 0001025 (25 leaves)"
+        $(function () {
+            function fmt(prefix, n, width) {
+                const digits = String(n).padStart(width, '0');
+                return prefix ? prefix + ' ' + digits : digits;
+            }
+            function update() {
+                const prefix = ($('#prefix').val() || '').trim().toUpperCase();
+                const first = parseInt($('#firstNumber').val(), 10);
+                const count = parseInt($('#leafCount').val(), 10);
+                const width = parseInt($('#numberWidth').val(), 10);
+                if (!(first > 0 && count > 0 && width > 0)) {
+                    $('#rangePreview').text('Leaves: –');
+                    return;
+                }
+                const last = first + count - 1;
+                const tooLong = String(last).length > width;
+                $('#rangePreview').text('Leaves: ' + fmt(prefix, first, width) + ' – ' + fmt(prefix, last, width)
+                    + ' (' + count + ' leaves)' + (tooLong ? '  ⚠ too many digits for the width' : ''));
+            }
+            $('#bookForm input').on('input', update);
+            update();
+        });
+    </script>
+</th:block>
+</body>
+</html>

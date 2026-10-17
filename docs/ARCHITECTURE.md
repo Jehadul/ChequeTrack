@@ -113,6 +113,22 @@ Spring Security (login, failure, logout events) ──────────�
 - **Tamper resistance.** Database triggers refuse `UPDATE`, `DELETE` and `TRUNCATE` on both tables, so history stays trustworthy even if application code has a bug.
 - **Reading.** `AUDIT_VIEW` grants the audit log screen. History of a single record is shown on that record's page, behind the record's own access rules (e.g. `/admin/users/{id}/history` first loads the user through `UserManagementService`).
 
+## 6b. Attachments (built in M5)
+
+- One `attachment` table links files to any record through `owner_type` + `owner_id`.
+- **Access follows the owner.** Each owner type has an `AttachmentOwnerResolver` bean. It loads the record through that module's own service, so the branch and permission rules apply unchanged, and it says whether the user may add or remove files. M4's invoices and bills have their resolver inside the attachment module (M4 must not depend on M5). Later modules (cheques) implement the interface themselves and can embed `fragments/attachments :: panel(...)` in their pages.
+- **Files.** The type is recognised from the first bytes (PDF, JPEG, PNG only), not from the name or the browser. The limit is 5 MB, checked by the app with a clear message; Tomcat's limit is set higher so the message can be shown. Files are stored outside the web root under `app.attachments.dir` (`uploads/` locally, a Docker volume in production) as `yyyy/MM/<uuid>.<ext>`. The user's file name is cleaned and kept only for display and download, and a SHA-256 is stored.
+- **Download** always goes through the app after the access check, with `X-Content-Type-Options: nosniff`, `no-store` caching and an RFC 5987 file name. Removing an attachment is a soft delete; the file stays on disk.
+
+## 6c. Cheque books and leaves (built in M6)
+
+- `cheque_book` and `cheque_leaf` are branch-scoped, with the branch of the company account.
+- Leaves are created by one `INSERT … SELECT … generate_series(first, last)` statement.
+- **No number twice:** the service checks for overlapping books with a friendly message, using native SQL so books of other branches are included. The guarantee is the unique index `(account_id, prefix, leaf_number)`. If two users save overlapping books at the same moment, one succeeds and the other gets the overlap message.
+- Leaf changes write `status_history`. Closing a book updates its unused leaves in one statement and records one history entry on the book with the count.
+- `ChequeBookService.finishIfEmpty` marks a book FINISHED; M9 calls it after using a leaf.
+- "Missing numbers" are reported as **skipped leaves**: unused leaves below the highest used or voided leaf of the same book.
+
 ## 7. Error handling
 
 - Business rule failures throw `BusinessException`. Pages show it as a message on the form; the API returns HTTP 422 with an RFC 7807 `ProblemDetail`.

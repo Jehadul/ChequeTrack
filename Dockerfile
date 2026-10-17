@@ -8,7 +8,7 @@ RUN mvn -q -B package -DskipTests
 
 FROM eclipse-temurin:17-jre
 WORKDIR /app
-RUN useradd --system --create-home chequetrack
+RUN useradd --system --create-home chequetrack && mkdir -p /data/attachments && chown chequetrack /data/attachments
 COPY --from=build /src/target/chequetrack-*.jar app.jar
 USER chequetrack
 ENV SPRING_PROFILES_ACTIVE=prod \

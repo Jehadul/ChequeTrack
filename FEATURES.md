@@ -151,10 +151,12 @@ Acceptance test: `bash scripts/e2e/m3-audit.sh` (39 checks; run `m2-authorizatio
 **Proposal ref:** 4.2 (scanned image) *(README document management)*
 **Demo:** upload a scanned cheque and an invoice, then view them.
 
-- [ ] Generic file upload that can be linked to any record
-- [ ] Attachment types: cheque scan, invoice, purchase order, other
-- [ ] File type and size checks; files stored outside the web root
-- [ ] View and download respect branch access rules
+- [x] Generic file upload that can be linked to any record (`owner_type` + `owner_id`); invoices and bills now, cheques from M8
+- [x] Attachment types: cheque scan, invoice, purchase order, deposit slip, other
+- [x] File type and size checks: PDF, JPEG or PNG recognised from the file content (not the name), max 5 MB
+- [x] Files stored outside the web root under random names (`uploads/yyyy/MM/<uuid>.<ext>`), with a SHA-256 checksum
+- [x] View and download respect the owner record's branch and permission rules (another branch's file answers 404)
+- [x] Open PDFs and images in the browser or download them; removing keeps the file (soft delete) and both are audited
 
 ## M6. Cheque books & leaves
 
@@ -162,13 +164,14 @@ Acceptance test: `bash scripts/e2e/m3-audit.sh` (39 checks; run `m2-authorizatio
 **Proposal ref:** 4.1, 4.3 (stock control)
 **Demo:** create a book of 50 leaves; an overlapping range is rejected; the stock view shows the counts.
 
-- [ ] Cheque book: company bank account, first and last leaf number, status (Active, Finished, Cancelled, Lost)
-- [ ] Leaves created automatically from the range
-- [ ] Overlapping ranges on the same account blocked
-- [ ] Leaf statuses: Unused, Allocated, Used, Void
-- [ ] Stock view: used, unused and void leaves per book
-- [ ] Missing-number check
-- [ ] Low-stock flag (the email alert is sent in M11)
+- [x] Cheque book: company bank account, optional series prefix, first number and leaf count, digit width, status (Active, Finished, Cancelled, Lost)
+- [x] Leaves created automatically from the range (one SQL statement, with a live preview of the range on the form)
+- [x] Overlapping ranges on the same account and series blocked, with a clear message; a unique index guarantees it even when two users save at the same time
+- [x] Leaf statuses: Unused, Allocated, Used, Void, Cancelled, Lost; voiding an unused leaf needs a reason (status history)
+- [x] Book becomes Finished automatically; cancel or report lost with a reason closes its unused leaves
+- [x] Stock view per account (unused, in use, used, void) and leaf grid per book
+- [x] Missing-number check: "skipped" leaves still unused although a later leaf was used or voided
+- [x] Low-stock flag against the level in Settings (the email alert is sent in M11)
 
 ## M7. Cheque lifecycle engine & approval workflow
 
