@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Received cheques</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-box-arrow-in-down"></i> Received cheques</h1>
+        <div class="ms-auto d-flex gap-1" sec:authorize="hasAuthority('RECEIVED_MANAGE')">
+            <a th:href="@{/received/deposits/new}" class="btn btn-outline-primary btn-sm"><i class="bi bi-bank"></i> Deposit</a>
+            <a th:href="@{/received/bulk}" class="btn btn-outline-primary btn-sm"><i class="bi bi-collection"></i> Series of PDCs</a>
+            <a th:href="@{/received/new}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Receive cheque</a>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item" th:each="t : ${ {'in-hand','deposited','bounced','cleared','closed','all'} }">
+            <a class="nav-link" th:classappend="${t == tab} ? 'active'"
+               th:href="@{/received(tab=${t}, partyId=${partyId}, q=${q}, from=${from}, to=${to})}"
+               th:text="${t == 'in-hand'} ? 'In hand' : (${t == 'all'} ? 'All' : ${#strings.capitalize(t)})">In hand</a>
+        </li>
+    </ul>
+
+    <form th:action="@{/received}" method="get" class="row g-2 mb-3">
+        <input type="hidden" name="tab" th:value="${tab}">
+        <div class="col-md-3">
+            <select name="partyId" class="form-select form-select-sm">
+                <option value="">All customers</option>
+                <option th:each="p : ${customers}" th:value="${p.id}" th:text="${p.name}" th:selected="${p.id == partyId}">Customer</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-2"><input type="date" name="from" class="form-control form-control-sm" th:value="${from}" title="Cheque date from"></div>
+        <div class="col-6 col-md-2"><input type="date" name="to" class="form-control form-control-sm" th:value="${to}" title="Cheque date to"></div>
+        <div class="col-md-3"><input type="search" name="q" class="form-control form-control-sm" th:value="${q}" placeholder="Cheque number or customer"></div>
+        <div class="col-md-2 d-flex gap-1">
+            <button class="btn btn-outline-secondary btn-sm flex-fill" type="submit"><i class="bi bi-funnel"></i> Filter</button>
+            <a th:href="@{/received(tab=${tab})}" class="btn btn-outline-secondary btn-sm" title="Clear"><i class="bi bi-x-lg"></i></a>
+        </div>
+    </form>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Cheque date</th>
+                    <th>Cheque no.</th>
+                    <th>Customer</th>
+                    <th>Drawer bank</th>
+                    <th>Type</th>
+                    <th class="text-end">Amount</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="c : ${cheques.content}" th:with="e=${expiry[c.id]}">
+                    <td class="text-nowrap" th:text="${@displayFormat.date(c.chequeDate)}">01/01/2026</td>
+                    <td><a class="fw-semibold font-monospace" th:href="@{/received/{id}(id=${c.id})}" th:text="${c.chequeNumber}">1234</a></td>
+                    <td th:text="${c.party.name}">Customer</td>
+                    <td class="small" th:text="${c.drawerBank.name}">Bank</td>
+                    <td class="small" th:text="${c.chequeType.label}">Post-dated</td>
+                    <td class="amount" th:text="${@displayFormat.amount(c.amount)}">0.00</td>
+                    <td class="text-nowrap">
+                        <span th:replace="~{fragments/forms :: chequeStatus(${c.status})}"></span>
+                        <span th:if="${e.stale}" class="badge text-bg-danger">Stale</span>
+                        <span th:if="${e.nearExpiry}" class="badge text-bg-warning" th:text="|Expires in ${e.daysLeft}d|">Expiring</span>
+                        <span th:if="${c.deferCount > 0}" class="badge text-bg-light border" th:text="|Deferred ×${c.deferCount}|">Deferred</span>
+                    </td>
+                </tr>
+                <tr th:if="${cheques.empty}">
+                    <td colspan="7" class="text-center text-secondary py-4">No cheques.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex align-items-center small" th:if="${cheques.totalElements > 0}">
+            <span class="text-secondary" th:text="|${cheques.totalElements} cheque(s)|">n</span>
+            <nav class="ms-auto" th:if="${cheques.totalPages > 1}">
+                <a th:if="${cheques.hasPrevious()}" class="btn btn-outline-secondary btn-sm"
+                   th:href="@{/received(tab=${tab}, partyId=${partyId}, q=${q}, from=${from}, to=${to}, page=${cheques.number - 1})}"><i class="bi bi-chevron-left"></i></a>
+                <span class="mx-2" th:text="|Page ${cheques.number + 1} of ${cheques.totalPages}|"></span>
+                <a th:if="${cheques.hasNext()}" class="btn btn-outline-secondary btn-sm"
+                   th:href="@{/received(tab=${tab}, partyId=${partyId}, q=${q}, from=${from}, to=${to}, page=${cheques.number + 1})}"><i class="bi bi-chevron-right"></i></a>
+            </nav>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

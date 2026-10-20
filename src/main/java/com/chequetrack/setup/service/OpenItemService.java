@@ -63,6 +63,13 @@ public class OpenItemService {
                 PageRequest.of(Math.max(page, 0), PAGE_SIZE, Sort.by(Sort.Order.desc("itemDate"), Sort.Order.desc("id"))));
     }
 
+    /** Open invoices (or bills) of one customer (or supplier) the user may see, oldest first. */
+    @Transactional(readOnly = true)
+    @PreAuthorize(VIEW)
+    public java.util.List<OpenItem> openForParty(Long partyId, OpenItemType type) {
+        return itemRepository.findOpenForParty(partyId, type);
+    }
+
     @Transactional(readOnly = true)
     @PreAuthorize(VIEW)
     public OpenItem get(Long id) {

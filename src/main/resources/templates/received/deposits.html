@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Deposits</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex align-items-center mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-bank"></i> Deposits</h1>
+        <a sec:authorize="hasAuthority('RECEIVED_MANAGE')" th:href="@{/received/deposits/new}" class="btn btn-primary btn-sm ms-auto">
+            <i class="bi bi-plus-lg"></i> New deposit</a>
+    </div>
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr><th>Number</th><th>Date</th><th>Account</th><th class="text-end">Cheques</th><th class="text-end">Total</th><th>By</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="b : ${batches}">
+                    <td><a class="fw-semibold font-monospace" th:href="@{/received/deposits/{id}(id=${b.id})}" th:text="${b.number}">DEP</a></td>
+                    <td th:text="${@displayFormat.date(b.depositDate)}"></td>
+                    <td class="small" th:text="|${b.account.bankBranch.bank.name} · ${b.account.accountNumber}|"></td>
+                    <td class="text-end" th:text="${b.chequeCount}"></td>
+                    <td class="amount" th:text="${@displayFormat.amount(b.totalAmount)}"></td>
+                    <td class="small" th:text="${b.createdBy}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(batches)}"><td colspan="6" class="text-center text-secondary py-4">No deposits yet.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

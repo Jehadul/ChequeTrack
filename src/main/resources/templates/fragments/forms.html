@@ -22,6 +22,16 @@
       th:classappend="${s == 'ACTIVE'} ? 'text-bg-success' : (${s == 'FINISHED'} ? 'text-bg-secondary' : 'text-bg-danger')"
       th:text="${s}">ACTIVE</span>
 
+<!-- Approval request status badge (ApprovalStatus) -->
+<span th:fragment="approvalStatus(status)" class="badge" th:with="s=${status.name()}"
+      th:classappend="${s == 'PENDING'} ? 'text-bg-warning' : (${s == 'APPROVED'} ? 'text-bg-success' : (${s == 'REJECTED'} ? 'text-bg-danger' : 'text-bg-secondary'))"
+      th:text="${s}">PENDING</span>
+
+<!-- Cheque status badge (ReceivedStatus / IssuedStatus: any LifecycleStatus) -->
+<span th:fragment="chequeStatus(status)" class="badge" th:with="s=${status.name()}"
+      th:classappend="${s == 'CLEARED'} ? 'text-bg-success' : (${s == 'BOUNCED' or s == 'VOID' or s == 'STOPPED' or s == 'WRITTEN_OFF'} ? 'text-bg-danger' : (${s == 'DEPOSITED' or s == 'ISSUED' or s == 'PRINTED'} ? 'text-bg-info' : (${s == 'IN_HAND' or s == 'APPROVED'} ? 'text-bg-primary' : (${s == 'PENDING_APPROVAL' or s == 'DRAFT'} ? 'text-bg-warning' : 'text-bg-secondary'))))"
+      th:text="${status.label}">In hand</span>
+
 <!-- User status badges (UserView) -->
 <th:block th:fragment="userStatus(user)">
     <span th:if="${user.enabled}" class="badge text-bg-success">Active</span>

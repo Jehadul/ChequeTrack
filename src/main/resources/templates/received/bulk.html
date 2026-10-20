@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Series of post-dated cheques</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <h1 class="h4 mb-1"><i class="bi bi-collection"></i> Series of post-dated cheques</h1>
+    <p class="text-secondary small">For example 12 monthly cheques from one customer. Numbers count up from the first one; dates move by the chosen months. All are saved, or none.</p>
+
+    <form th:action="@{/received/bulk}" th:object="${form}" method="post" novalidate style="max-width: 980px" id="bulkForm">
+        <div th:replace="~{fragments/forms :: globalErrors}"></div>
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="partyId" class="form-label">Customer <span class="text-danger">*</span></label>
+                        <select th:field="*{partyId}" class="form-select" th:classappend="${#fields.hasErrors('partyId')} ? 'is-invalid'">
+                            <option value="">Choose…</option>
+                            <option th:each="p : ${customers}" th:value="${p.id}" th:text="${p.label}">Customer</option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{partyId}"></div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="chequeType" class="form-label">Kind</label>
+                        <select th:field="*{chequeType}" class="form-select">
+                            <option value="POST_DATED">Post-dated (instalments)</option>
+                            <option value="SECURITY">Security cheques</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="branchId" class="form-label">Branch</label>
+                        <select th:field="*{branchId}" class="form-select">
+                            <option th:each="b : ${branches}" th:value="${b.id}" th:text="${b.label}">HO</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label for="firstNumber" class="form-label">First cheque number <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{firstNumber}" class="form-control font-monospace" maxlength="20" inputmode="numeric"
+                               th:classappend="${#fields.hasErrors('firstNumber')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{firstNumber}"></div>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label for="count" class="form-label">How many <span class="text-danger">*</span></label>
+                        <input type="number" th:field="*{count}" class="form-control" min="2" max="60"
+                               th:classappend="${#fields.hasErrors('count')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{count}"></div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="firstDate" class="form-label">First cheque date <span class="text-danger">*</span></label>
+                        <input type="date" th:field="*{firstDate}" class="form-control" th:classappend="${#fields.hasErrors('firstDate')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{firstDate}"></div>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label for="everyMonths" class="form-label">Every (months)</label>
+                        <input type="number" th:field="*{everyMonths}" class="form-control" min="1" max="12">
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label for="amount" class="form-label">Amount each <span class="text-danger">*</span></label>
+                        <input type="number" th:field="*{amount}" class="form-control text-end" min="0.01" step="0.01"
+                               th:classappend="${#fields.hasErrors('amount')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{amount}"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-5 mb-3">
+                        <label for="drawerBankBranchId" class="form-label">Drawer bank branch <span class="text-danger">*</span></label>
+                        <select th:field="*{drawerBankBranchId}" class="form-select" th:classappend="${#fields.hasErrors('drawerBankBranchId')} ? 'is-invalid'">
+                            <option value="">Choose…</option>
+                            <option th:each="bb : ${bankBranches}" th:value="${bb.id}" th:text="${bb.label}">Bank</option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{drawerBankBranchId}"></div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="drawerAccountNumber" class="form-label">Drawer account <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{drawerAccountNumber}" class="form-control font-monospace" maxlength="30"
+                               th:classappend="${#fields.hasErrors('drawerAccountNumber')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{drawerAccountNumber}"></div>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label for="receivedDate" class="form-label">Received on</label>
+                        <input type="date" th:field="*{receivedDate}" class="form-control">
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label for="drawerName" class="form-label">Name on cheque</label>
+                        <input type="text" th:field="*{drawerName}" class="form-control" maxlength="150">
+                    </div>
+                </div>
+                <div class="alert alert-light border small mb-0" id="seriesPreview">–</div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save all cheques</button>
+        <a th:href="@{/received}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+</th:block>
+
+<th:block layout:fragment="scripts">
+    <script>
+        // Preview of the series: numbers, dates and total
+        $(function () {
+            function update() {
+                const first = $('#firstNumber').val().trim(), n = parseInt($('#count').val(), 10);
+                const every = parseInt($('#everyMonths').val(), 10) || 1, date = $('#firstDate').val();
+                const amount = parseFloat($('#amount').val());
+                if (!/^\d+$/.test(first) || !(n > 1) || !date) { $('#seriesPreview').text('–'); return; }
+                const width = first.length, start = BigInt(first);
+                const last = (start + BigInt(n - 1)).toString().padStart(width, '0');
+                const d = new Date(date + 'T00:00:00'); d.setMonth(d.getMonth() + every * (n - 1));
+                const lastDate = d.toISOString().substring(0, 10);
+                const total = amount > 0 ? ' · total Tk ' + (amount * n).toLocaleString('en-IN', {minimumFractionDigits: 2}) : '';
+                $('#seriesPreview').text(n + ' cheques: ' + first + ' to ' + last + ', dated ' + date + ' to ' + lastDate + total);
+            }
+            $('#bulkForm input, #bulkForm select').on('input change', update);
+            update();
+        });
+    </script>
+</th:block>
+</body>
+</html>

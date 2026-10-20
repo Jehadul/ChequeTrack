@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Receive cheque</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <h1 class="h4 mb-3"><i class="bi bi-box-arrow-in-down"></i> Receive a cheque</h1>
+    <div th:if="${form.replacesId}" class="alert alert-info py-2">
+        <i class="bi bi-arrow-repeat"></i> This cheque replaces an earlier cheque of the same customer.
+    </div>
+
+    <form th:action="@{/received}" th:object="${form}" method="post" novalidate style="max-width: 980px">
+        <input type="hidden" th:field="*{replacesId}">
+        <div th:replace="~{fragments/forms :: globalErrors}"></div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-white fw-semibold">Customer and cheque</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="partyId" class="form-label">Customer <span class="text-danger">*</span></label>
+                        <select th:field="*{partyId}" class="form-select" th:classappend="${#fields.hasErrors('partyId')} ? 'is-invalid'">
+                            <option value="">Choose…</option>
+                            <option th:each="p : ${customers}" th:value="${p.id}" th:text="${p.label}">Customer</option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{partyId}"></div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="chequeType" class="form-label">Type <span class="text-danger">*</span></label>
+                        <select th:field="*{chequeType}" class="form-select">
+                            <option th:each="t : ${types}" th:value="${t}" th:text="${t.label}" th:title="${t.description}">Current</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="branchId" class="form-label">Branch</label>
+                        <select th:field="*{branchId}" class="form-select">
+                            <option th:each="b : ${branches}" th:value="${b.id}" th:text="${b.label}">HO</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label for="chequeNumber" class="form-label">Cheque number <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{chequeNumber}" class="form-control font-monospace" maxlength="20"
+                               th:classappend="${#fields.hasErrors('chequeNumber')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{chequeNumber}"></div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="chequeDate" class="form-label">Cheque date <span class="text-danger">*</span></label>
+                        <input type="date" th:field="*{chequeDate}" class="form-control" th:classappend="${#fields.hasErrors('chequeDate')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{chequeDate}"></div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="amount" class="form-label">Amount (Tk) <span class="text-danger">*</span></label>
+                        <input type="number" th:field="*{amount}" class="form-control text-end" min="0.01" step="0.01"
+                               th:classappend="${#fields.hasErrors('amount')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{amount}"></div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="receivedDate" class="form-label">Received on <span class="text-danger">*</span></label>
+                        <input type="date" th:field="*{receivedDate}" class="form-control" th:classappend="${#fields.hasErrors('receivedDate')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{receivedDate}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-white fw-semibold">Drawer (the customer's bank account)</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="drawerBankBranchId" class="form-label">Bank branch <span class="text-danger">*</span></label>
+                        <select th:field="*{drawerBankBranchId}" class="form-select" th:classappend="${#fields.hasErrors('drawerBankBranchId')} ? 'is-invalid'">
+                            <option value="">Choose…</option>
+                            <option th:each="bb : ${bankBranches}" th:value="${bb.id}" th:text="${bb.label}">Bank, branch</option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{drawerBankBranchId}"></div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="drawerAccountNumber" class="form-label">Account number <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{drawerAccountNumber}" class="form-control font-monospace" maxlength="30"
+                               th:classappend="${#fields.hasErrors('drawerAccountNumber')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{drawerAccountNumber}"></div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="drawerName" class="form-label">Name on cheque</label>
+                        <input type="text" th:field="*{drawerName}" class="form-control" maxlength="150">
+                    </div>
+                </div>
+                <div>
+                    <label for="narration" class="form-label">Narration</label>
+                    <input type="text" th:field="*{narration}" class="form-control" maxlength="300">
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-white fw-semibold">Invoices this cheque pays <span class="fw-normal text-secondary small">(optional)</span></div>
+            <div class="card-body">
+                <p th:if="${form.partyId == null}" class="text-secondary small mb-0">Choose the customer to see their open invoices.</p>
+                <p th:if="${form.partyId != null and #lists.isEmpty(form.allocations)}" class="text-secondary small mb-0">This customer has no open invoices.</p>
+                <table class="table table-sm align-middle mb-0" th:unless="${#lists.isEmpty(form.allocations)}">
+                    <thead><tr><th>Invoice</th><th class="text-end">Outstanding</th><th class="text-end" style="width: 12rem">Paid by this cheque (Tk)</th></tr></thead>
+                    <tbody>
+                    <tr th:each="a, it : *{allocations}">
+                        <td>
+                            <input type="hidden" th:field="*{allocations[__${it.index}__].openItemId}">
+                            <input type="hidden" th:field="*{allocations[__${it.index}__].number}">
+                            <input type="hidden" th:field="*{allocations[__${it.index}__].outstanding}">
+                            <span class="font-monospace" th:text="${a.number}">INV-1</span>
+                        </td>
+                        <td class="amount" th:text="${@displayFormat.amount(a.outstanding)}">0.00</td>
+                        <td><input type="number" th:field="*{allocations[__${it.index}__].amount}" class="form-control form-control-sm text-end"
+                                   min="0" step="0.01" th:attr="max=${a.outstanding}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save cheque</button>
+        <a th:href="@{/received}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+</th:block>
+
+<th:block layout:fragment="scripts">
+    <script th:inline="javascript">
+        // Choosing a customer reloads the form with that customer's open invoices
+        $('#partyId').on('change', function () {
+            const params = new URLSearchParams({partyId: this.value});
+            const replaces = $('#replacesId').val();
+            if (replaces) params.set('replaces', replaces);
+            window.location = /*[[@{/received/new}]]*/ '/received/new' + '?' + params.toString();
+        });
+    </script>
+</th:block>
+</body>
+</html>

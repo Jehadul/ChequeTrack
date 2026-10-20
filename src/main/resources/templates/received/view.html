@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="|Cheque ${c.chequeNumber}|">Cheque</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-box-arrow-in-down"></i> Cheque <span class="font-monospace" th:text="${c.chequeNumber}">1234</span></h1>
+        <span th:replace="~{fragments/forms :: chequeStatus(${c.status})}"></span>
+        <span th:if="${expiry.stale}" class="badge text-bg-danger">Stale – expired <span th:text="${@displayFormat.date(expiry.date)}"></span></span>
+        <span th:if="${expiry.nearExpiry}" class="badge text-bg-warning" th:text="|Expires in ${expiry.daysLeft} days|">Expiring</span>
+        <a th:href="@{/received}" class="btn btn-link btn-sm ms-auto"><i class="bi bi-arrow-left"></i> Received cheques</a>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-baseline mb-2">
+                        <div class="fs-3 fw-semibold" th:text="|Tk ${@displayFormat.amount(c.amount)}|">Tk 0.00</div>
+                        <div class="ms-auto text-secondary" th:text="${c.chequeType.label}">Post-dated</div>
+                    </div>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Customer</dt>
+                        <dd class="col-sm-8" th:text="${c.party.label}"></dd>
+                        <dt class="col-sm-4">Cheque date</dt>
+                        <dd class="col-sm-8">
+                            <span th:text="${@displayFormat.date(c.chequeDate)}"></span>
+                            <span th:if="${c.chequeDate != c.originalDate}" class="small text-secondary"
+                                  th:text="|(written ${@displayFormat.date(c.originalDate)}, deferred ${c.deferCount}×)|"></span>
+                        </dd>
+                        <dt class="col-sm-4">Valid until</dt>
+                        <dd class="col-sm-8" th:text="${@displayFormat.date(expiry.date)}"></dd>
+                        <dt class="col-sm-4">Drawer</dt>
+                        <dd class="col-sm-8">
+                            <div th:text="${c.drawerBankBranch.label}"></div>
+                            <div class="small"><span class="font-monospace" th:text="${c.drawerAccountNumber}"></span>
+                                <span th:if="${c.drawerName}" th:text="| · ${c.drawerName}|"></span></div>
+                        </dd>
+                        <dt class="col-sm-4">Received on</dt>
+                        <dd class="col-sm-8" th:text="${@displayFormat.date(c.receivedDate)}"></dd>
+                        <th:block th:if="${c.depositBatch}">
+                            <dt class="col-sm-4">Deposit</dt>
+                            <dd class="col-sm-8"><a th:href="@{/received/deposits/{id}(id=${c.depositBatch.id})}" th:text="${c.depositBatch.number}">DEP</a>
+                                <span class="small text-secondary" th:text="|on ${@displayFormat.date(c.depositBatch.depositDate)} into ${c.depositBatch.account.label}|"></span></dd>
+                        </th:block>
+                        <th:block th:if="${c.receipt}">
+                            <dt class="col-sm-4">Receipt</dt>
+                            <dd class="col-sm-8">
+                                <span class="font-monospace" th:text="${c.receipt.number}">RCPT</span>
+                                <span th:if="${c.receipt.active}" class="badge text-bg-success">Active</span>
+                                <span th:unless="${c.receipt.active}" class="badge text-bg-secondary" th:title="${c.receipt.cancelReason}">Cancelled</span>
+                                <span class="small text-secondary" th:if="${c.clearedDate}" th:text="|cleared ${@displayFormat.date(c.clearedDate)}|"></span>
+                            </dd>
+                        </th:block>
+                        <th:block th:if="${c.bounceCount > 0}">
+                            <dt class="col-sm-4">Bounces</dt>
+                            <dd class="col-sm-8">
+                                <span th:text="|${c.bounceCount}× · last ${@displayFormat.date(c.lastBounceDate)}: ${c.lastBounceReason}|"></span>
+                                <div class="small text-secondary" th:text="|Bank charges Tk ${@displayFormat.amount(c.bankCharges)} · presented again ${c.representCount}×|"></div>
+                            </dd>
+                        </th:block>
+                        <dt class="col-sm-4">Narration</dt>
+                        <dd class="col-sm-8 mb-0" th:text="${c.narration} ?: '-'"></dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card mb-3" th:unless="${#lists.isEmpty(c.invoices)}">
+                <div class="card-header bg-white fw-semibold">Invoices paid by this cheque</div>
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="table-light"><tr><th>Invoice</th><th class="text-end">Planned</th><th class="text-end">Settled</th><th>Invoice status</th></tr></thead>
+                    <tbody>
+                    <tr th:each="a : ${c.invoices}">
+                        <td><a class="font-monospace" th:href="@{/setup/invoices/{id}(id=${a.invoice.id})}" th:text="${a.invoice.number}">INV</a></td>
+                        <td class="amount" th:text="${@displayFormat.amount(a.amount)}"></td>
+                        <td class="amount" th:text="${@displayFormat.amount(a.settledAmount)}"></td>
+                        <td th:insert="~{fragments/forms :: itemStatus(${a.invoice.status})}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div th:replace="~{fragments/attachments :: panel('ReceivedCheque', ${c.id}, ${attachments}, ${canManage}, ${categories})}"></div>
+
+            <div class="card mt-3">
+                <div class="card-header bg-white fw-semibold">Activity</div>
+                <div th:replace="~{fragments/history :: auditTable(${auditEntries}, false)}"></div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card mb-3" th:if="${canManage and !#lists.isEmpty(actions)}">
+                <div class="card-header bg-white fw-semibold">Next steps</div>
+                <div class="list-group list-group-flush">
+                    <details class="list-group-item cheque-action" th:each="t : ${actions}">
+                        <summary class="d-flex align-items-center">
+                            <span class="fw-semibold" th:text="${t.label}">Deposit</span>
+                            <span th:if="${t.approval}" class="badge text-bg-warning ms-2">needs approval</span>
+                            <span class="ms-auto small text-secondary" th:text="|→ ${machine.label(t.to)}|"></span>
+                        </summary>
+
+                        <a th:if="${t.action == 'DEPOSIT'}" th:href="@{/received/deposits/new(chequeId=${c.id})}"
+                           class="btn btn-primary btn-sm mt-2"><i class="bi bi-bank"></i> Add to a deposit</a>
+
+                        <form th:unless="${t.action == 'DEPOSIT'}" th:action="@{/received/{id}/action/{a}(id=${c.id}, a=${t.action})}"
+                              method="post" class="mt-2">
+                            <th:block th:if="${reasons[t.action] != null}">
+                                <select name="reasonId" class="form-select form-select-sm mb-2" th:required="${t.reasonRequired}">
+                                    <option value="">Reason…</option>
+                                    <option th:each="r : ${reasons[t.action]}" th:value="${r.id}" th:text="${r.description}">Reason</option>
+                                </select>
+                                <input type="text" name="note" class="form-control form-control-sm mb-2" maxlength="200" placeholder="Note (optional)">
+                            </th:block>
+                            <input th:if="${reasons[t.action] == null and t.reasonRequired}" type="text" name="note"
+                                   class="form-control form-control-sm mb-2" maxlength="500" placeholder="Reason *" required>
+
+                            <div th:if="${t.action == 'CLEAR' or t.action == 'BOUNCE'}" class="mb-2">
+                                <label class="form-label small mb-1" th:text="${t.action == 'CLEAR'} ? 'Cleared on' : 'Bounced on'">Date</label>
+                                <input type="date" name="date" class="form-control form-control-sm" th:value="${today}" th:max="${today}" required>
+                            </div>
+                            <div th:if="${t.action == 'BOUNCE'}" class="mb-2">
+                                <label class="form-label small mb-1">Bank charge (Tk)</label>
+                                <input type="number" name="bankCharge" class="form-control form-control-sm" min="0" step="0.01" value="0">
+                            </div>
+                            <div th:if="${t.action == 'DEFER'}" class="mb-2">
+                                <label class="form-label small mb-1">New date *</label>
+                                <input type="date" name="date" class="form-control form-control-sm" th:min="${c.chequeDate.plusDays(1)}"
+                                       th:max="${expiry.date}" required>
+                            </div>
+                            <p th:if="${t.action == 'CLEAR'}" class="small text-secondary mb-2">Creates the customer receipt and settles the linked invoices.</p>
+                            <p th:if="${t.action == 'BOUNCE' and c.status.name() == 'CLEARED'}" class="small text-danger mb-2">The receipt will be cancelled and the invoices re-opened.</p>
+                            <p th:if="${t.action == 'REPLACE'}" class="small text-secondary mb-2">You will then enter the new cheque.</p>
+                            <button type="submit" class="btn btn-sm"
+                                    th:classappend="${t.action == 'BOUNCE' or t.action == 'CANCEL' or t.action == 'WRITE_OFF'} ? 'btn-outline-danger' : 'btn-primary'"
+                                    th:text="${t.approval} ? 'Send for approval' : ${t.label}">Go</button>
+                        </form>
+                    </details>
+                </div>
+            </div>
+
+            <div class="card mb-3" th:unless="${#lists.isEmpty(approvals)}">
+                <div class="card-header bg-white fw-semibold">Approval requests</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex align-items-center gap-2" th:each="r : ${approvals}">
+                        <a th:href="@{/approvals/{id}(id=${r.id})}" th:text="${r.approvalAction.label}">Defer</a>
+                        <span class="small text-secondary" th:text="|by ${r.requestedBy}, ${@displayFormat.ts(r.requestedAt)}|"></span>
+                        <span class="ms-auto" th:insert="~{fragments/forms :: approvalStatus(${r.status})}"></span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-white fw-semibold">Status history</div>
+                <div class="card-body">
+                    <div th:replace="~{fragments/history :: statusTimeline(${statusHistory})}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

@@ -21,6 +21,12 @@ public interface OpenItemRepository extends JpaRepository<OpenItem, Long> {
     Page<OpenItem> search(@Param("type") OpenItemType type, @Param("statuses") Collection<OpenItemStatus> statuses,
                           @Param("q") String likeOrEmpty, Pageable pageable);
 
+    /** Items of one party still to be settled, oldest first. */
+    @Query("select i from OpenItem i where i.party.id = :partyId and i.itemType = :type "
+            + "and i.status in (com.chequetrack.setup.domain.OpenItemStatus.OPEN, com.chequetrack.setup.domain.OpenItemStatus.PARTLY_SETTLED) "
+            + "order by i.itemDate, i.id")
+    java.util.List<OpenItem> findOpenForParty(@Param("partyId") Long partyId, @Param("type") OpenItemType type);
+
     /** Duplicate check across all branches (native SQL, so the branch filter does not hide other branches). */
     @Query(value = "select exists(select 1 from open_item where company_id = :companyId and item_type = :type "
             + "and upper(number) = upper(:number) and deleted = false and id <> coalesce(:excludeId, -1))",

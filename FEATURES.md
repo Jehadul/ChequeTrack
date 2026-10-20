@@ -179,16 +179,18 @@ Acceptance test: `bash scripts/e2e/m3-audit.sh` (39 checks; run `m2-authorizatio
 **Proposal ref:** Objective 1, 5
 **Demo:** an illegal status change is refused; a legal one is saved and appears in the history.
 
-- [ ] State machine for **received** cheques: In Hand → Deposited → Cleared / Bounced → Re-presented; also Deferred, Replaced, Returned, Cancelled
-- [ ] State machine for **issued** cheques: Draft → Pending Approval → Approved → Printed → Issued (handed over) → Cleared; also Rejected, Cancelled, Void, Stopped, Deferred, Reissued *(README statuses merged)*
-- [ ] One transition service that, in a single database transaction:
-  1. checks the move is allowed
-  2. checks whether approval is needed (M4 rules)
-  3. writes the status history (M3)
-  4. updates the linked receipt or payment
+- [x] State machine for **received** cheques: In hand → Deposited → Cleared / Bounced → Present again; also Take back from deposit, Defer (approval), Return, Replace, Write off (approval), Cancel
+- [x] State machine for **issued** cheques: Draft → (Pending approval) → Approved → Printed → Issued (handed over) → Cleared; also Cancel, Reprint (approval), Defer (approval), Void (approval), Stop payment (approval). Rejected requests go back to Draft; reissue = a new cheque in M9 *(README statuses merged)*
+- [x] Both defined once in code (`ChequeLifecycles`) and shown on the **Cheque lifecycle** page, generated from the same rules
+- [x] One transition service that, in a single database transaction:
+  1. checks the move is allowed (and that a reason is given where required, and no approval is pending)
+  2. checks whether approval is needed (M4 rules); if so creates an approval request and stops
+  3. runs the module's side effects (receipt/payment, added in M8/M9), then writes the status history (M3) and audit log
   - and rolls back everything if any step fails
-- [ ] Approval requests and an approval inbox for the Accounts Manager (approve or reject with a comment) *(README multi-level approval)*
-- [ ] Visual status timeline on every cheque page *(README)*
+- [x] Approval requests with steps copied from the rules; inbox for the approver's role with a sidebar count; approve, reject (comment required), withdraw by requester; the last approval carries out the change *(README multi-level approval)*
+- [x] Separation of duties: no approving your own request, one person per step, approver needs the step's role and branch access
+- [x] Visual status timeline fragment ready (from M3); shown on every cheque page from M8 *(README)*
+- [x] End-to-end check of the engine with real cheques (done in M8: deposit, clear, bounce, represent, defer with approve / reject / withdraw, illegal moves refused)
 
 ## M8. Received cheques
 
@@ -196,15 +198,15 @@ Acceptance test: `bash scripts/e2e/m3-audit.sh` (39 checks; run `m2-authorizatio
 **Proposal ref:** 4.2
 **Demo:** receive → deposit → clear (a receipt is created); receive → deposit → bounce → re-present.
 
-- [ ] **Entry:** customer, type (current, post-dated, security), cheque number, date, amount, drawer bank and account, linked invoices, scanned image
-- [ ] **Bulk entry:** a series of cheques from one customer (e.g. 12 monthly PDCs) entered in one go
-- [ ] **Duplicate check:** the same bank + account + cheque number cannot be entered twice
-- [ ] **Deposit batch:** pick cheques due by a date and print a deposit slip
-- [ ] **Clearance:** marking a cheque cleared creates the customer receipt
-- [ ] **Bounce:** record the reason and bank charge, cancel the receipt, re-open the invoice, raise an alert and allow the cheque to be presented again
-- [ ] **Defer, replace and return:** each with a reason and kept in the history; respect the maximum number of defers
-- [ ] **Expiry warning:** flag cheques close to or past 6 months
-- [ ] Received cheque register (list with search and filters)
+- [x] **Entry:** customer, type (current, post-dated, security), cheque number, date, amount, drawer bank branch and account, linked invoices (amount per invoice), scanned image (attachments panel)
+- [x] **Bulk entry:** a series of cheques from one customer (e.g. 12 monthly PDCs) entered in one go, with a live preview; all saved or none
+- [x] **Duplicate check:** the same bank + account + cheque number cannot be entered twice (friendly check + unique index; cancelled entries ignored)
+- [x] **Deposit batch:** pick cheques due by a date (post-dated not before their date, stale never) and print a deposit slip; the whole batch rolls back if one cheque is refused
+- [x] **Clearance:** marking a cheque cleared creates the customer receipt (locked numbering RCPT-yyyy-nnnnn) and settles the linked invoices
+- [x] **Bounce:** record the reason and bank charge, cancel the receipt, re-open the invoice, and allow the cheque to be presented again (also after clearing). The alert email is sent in M11
+- [x] **Defer, replace and return:** each with a reason and kept in the history; defer needs approval and respects the maximum number of defers and the expiry date; replace leads to entering the new cheque
+- [x] **Expiry warning:** "Stale" and "Expires in n days" badges; stale cheques cannot be deposited or presented again
+- [x] Received cheque register (status tabs, customer, date range and number search, paging), deposit list, cheque page with next steps, approvals, timeline, attachments and activity
 
 ## M9. Issued cheques
 

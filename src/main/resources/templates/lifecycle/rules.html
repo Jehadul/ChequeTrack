@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Cheque lifecycle</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <h1 class="h4 mb-1"><i class="bi bi-diagram-2"></i> Cheque lifecycle</h1>
+    <p class="text-secondary small">
+        The stages a cheque can go through and the only changes allowed between them. This page is generated from the
+        same rules the system enforces. Actions marked <span class="badge text-bg-warning">approval</span> follow the
+        <a th:href="@{/setup/approvals}">approval rules</a> for their amount.
+    </p>
+
+    <div class="card mb-4" th:each="m : ${machines}">
+        <div class="card-header bg-white fw-semibold" th:text="${m.name}">Received cheque</div>
+        <div class="card-body">
+            <h2 class="h6 text-secondary text-uppercase small">Stages</h2>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <div class="lifecycle-stage" th:each="s : ${m.statuses}" th:classappend="${s.finalStatus} ? 'final'"
+                     th:title="${s.description}">
+                    <span class="fw-semibold" th:text="${s.label}">In hand</span>
+                    <span th:if="${s == m.initial}" class="badge text-bg-light border ms-1">start</span>
+                    <span th:if="${s.finalStatus}" class="badge text-bg-secondary ms-1">final</span>
+                    <div class="small text-secondary" th:text="${s.description}">description</div>
+                </div>
+            </div>
+
+            <h2 class="h6 text-secondary text-uppercase small">Allowed changes</h2>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="table-light">
+                    <tr><th>Action</th><th>Allowed when</th><th></th><th>Becomes</th><th>Rules</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="t : ${m.transitions}">
+                        <td class="fw-semibold" th:text="${t.label}">Deposit</td>
+                        <td th:text="${m.fromLabels(t)}">In hand</td>
+                        <td class="text-secondary"><i class="bi bi-arrow-right"></i></td>
+                        <td>
+                            <span th:text="${m.label(t.to)}">Deposited</span>
+                            <span th:if="${t.pendingStatus}" class="small text-secondary"
+                                  th:text="|(${m.label(t.pendingStatus)} while waiting; back to ${m.label(t.rejectedStatus)} if rejected)|"></span>
+                        </td>
+                        <td>
+                            <span th:if="${t.approval}" class="badge text-bg-warning" th:text="|approval: ${t.approval.label}|">approval</span>
+                            <span th:if="${t.reasonRequired}" class="badge text-bg-light border">reason required</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

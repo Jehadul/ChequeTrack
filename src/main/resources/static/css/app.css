@@ -141,3 +141,40 @@ body {
 .leaf-USED { background: #e3eaf3; border-color: #9fb6d3; color: #1f4e79; }
 .leaf-VOID { background: #fdecea; border-color: #f5a3a3; color: #9b1c1c; text-decoration: line-through; }
 .leaf-CANCELLED, .leaf-LOST { background: #eeeeee; border-color: #cccccc; color: #666666; text-decoration: line-through; }
+
+/* Lifecycle stages (lifecycle/rules.html) */
+.lifecycle-stage {
+    border: 1px solid #b6c8de;
+    border-left: 4px solid var(--app-brand);
+    border-radius: .375rem;
+    padding: .4rem .6rem;
+    background: #fff;
+    max-width: 260px;
+}
+
+.lifecycle-stage.final {
+    border-left-color: #6c757d;
+    background: #f8f9fa;
+}
+
+/* Cheque action panels (received/view.html) */
+.cheque-action summary {
+    cursor: pointer;
+    list-style: none;
+}
+
+.cheque-action summary::-webkit-details-marker {
+    display: none;
+}
+
+.cheque-action[open] summary {
+    margin-bottom: .25rem;
+}
+
+/* Print: only the page content, e.g. the deposit slip */
+@media print {
+    .app-topbar, .app-sidebar, .alert { display: none !important; }
+    .app-content { padding: 0; }
+    body { background: #fff; }
+    .deposit-slip { border: none; }
+}

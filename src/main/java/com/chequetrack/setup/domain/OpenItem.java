@@ -92,6 +92,39 @@ public class OpenItem extends BranchScopedEntity {
         this.status = OpenItemStatus.CANCELLED;
     }
 
+    /**
+     * A cheque paid part or all of this item. Never settles more than is outstanding.
+     * @return the amount actually settled (kept by the cheque so a bounce can reverse exactly that)
+     */
+    public BigDecimal applySettlement(BigDecimal wanted) {
+        if (status == OpenItemStatus.CANCELLED || wanted.signum() <= 0) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal applied = wanted.min(getOutstanding());
+        settledAmount = settledAmount.add(applied);
+        refreshStatus();
+        return applied;
+    }
+
+    /** The cheque that settled this item bounced: the item is open again by that amount. */
+    public void reverseSettlement(BigDecimal amount) {
+        settledAmount = settledAmount.subtract(amount).max(BigDecimal.ZERO);
+        refreshStatus();
+    }
+
+    private void refreshStatus() {
+        if (status == OpenItemStatus.CANCELLED) {
+            return;
+        }
+        if (settledAmount.signum() == 0) {
+            status = OpenItemStatus.OPEN;
+        } else if (settledAmount.compareTo(amount) >= 0) {
+            status = OpenItemStatus.SETTLED;
+        } else {
+            status = OpenItemStatus.PARTLY_SETTLED;
+        }
+    }
+
     public BigDecimal getOutstanding() {
         return status == OpenItemStatus.CANCELLED ? BigDecimal.ZERO : amount.subtract(settledAmount);
     }

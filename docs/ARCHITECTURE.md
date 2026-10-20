@@ -99,6 +99,33 @@ Every status change goes through one `TransitionService`. In a single transactio
 
 If any step fails, everything rolls back.
 
+How it is built:
+
+```
+page/API ──► TransitionService.request(recordType, id, action, input)
+                │ LifecycleSupport.load(id)            (M8/M9: loads with branch/permission checks)
+                │ StateMachine: allowed from current status? reason given? no pending approval?
+                │ ApprovalRuleService.requiredSteps(action, amount)
+                ├── steps needed ──► ApprovalRequest (+ steps copied) ── optional "pending" status
+                └── none ─────────► LifecycleSupport.beforeChange()   (side effects: receipt, payment…)
+                                    record.applyLifecycleStatus(to) ► StatusChangedEvent + AuditEvent
+ApprovalService.approve() ── last step ──► TransitionService.executeApproved()  (same transaction)
+```
+
+- **Rules as data in code.** `ChequeLifecycles.RECEIVED` and `ChequeLifecycles.ISSUED` list every action: from-statuses, to-status, approval list, optional pending/rejected status, and whether a reason is required. The `/lifecycle` page renders them, so documentation and enforcement can't differ.
+- **Module boundary.** The engine knows records only through `LifecycleRecord` and `LifecycleSupport`, implemented by the cheque modules (M8/M9) as beans.
+- **Approvals.** Required steps are copied onto the request when it is made. A decision needs `APPROVAL_DECIDE`, the step's role, branch access, and someone other than the requester or an earlier approver. `@Version` stops two approvers deciding the same step at once, and a partial unique index allows only one pending request per record. If the record changed in the meantime, the final approval refuses to run, so the request has to be rejected instead.
+
+### Received cheques (M8) on the engine
+
+- `ReceivedCheque` implements `LifecycleRecord`, and `ReceivedChequeLifecycle` implements `LifecycleSupport`. Its `beforeChange` holds the side effects:
+  - DEPOSIT: links the deposit batch; refuses post-dated or stale cheques.
+  - CLEAR: creates the receipt and settles invoices.
+  - BOUNCE: cancels the receipt, reverses exactly what was settled, and adds the charge.
+  - REPRESENT / DEFER: checks the expiry date and the defer limit.
+- A deposit batch calls the engine once per cheque inside one transaction, so a single refused cheque rolls the whole batch back.
+- `DocumentNumberService` hands out numbers (`RCPT-2026-00001`, `DEP-…`) with one atomic `INSERT … ON CONFLICT DO UPDATE … RETURNING` on `doc_sequence`. The row stays locked until the transaction ends, so numbers are never duplicated.
+
 ## 6a. Audit trail and status history (built in M3)
 
 ```

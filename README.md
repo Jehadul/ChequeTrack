@@ -2,6 +2,7 @@
 ChequeTrack is a web-based system for managing, tracking and printing business cheques. It keeps every received and issued cheque, including post-dated cheques (PDCs), in one place from the day it comes in or goes out until it is cleared, bounced or cancelled. It also prints cheques directly onto any bank's leaf using layouts configured on screen, with no handwriting.
 
 The full task list, in build and demo order, is in [FEATURES.md](FEATURES.md).
+How to use the system, and how its parts connect, is in the [User Manual](docs/USER_MANUAL.md).
 
 ## Features
 
