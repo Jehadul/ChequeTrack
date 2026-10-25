@@ -23,6 +23,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
@@ -216,6 +217,32 @@ public class ChequeBookService {
         events.publishEvent(AuditEvent.of(newStatus == BookStatus.LOST ? "CHEQUE_BOOK_LOST" : "CHEQUE_BOOK_CANCELLED",
                 BOOK, book.getId(), (newStatus == BookStatus.LOST ? "Reported lost: " : "Cancelled: ")
                         + book.getRangeLabel() + " – " + text));
+    }
+
+    /**
+     * Takes the next unused leaf of an account for a new cheque (M9) and marks it ALLOCATED.
+     * Must run inside the caller's transaction: the row lock is held until it commits, and a
+     * second user at the same moment gets the following leaf.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public ChequeLeaf allocateNextLeaf(CompanyBankAccount account) {
+        ChequeLeaf leaf = leafRepository.lockNextUnused(account.getId())
+                .orElseThrow(() -> new BusinessException("No unused cheque leaf left for " + account.getLabel()
+                        + ". Add a cheque book first."));
+        leaf.allocate();
+        events.publishEvent(new StatusChangedEvent(LEAF, leaf.getId(), leaf.getCompanyId(), leaf.getBranchId(),
+                LeafStatus.UNUSED.name(), LeafStatus.ALLOCATED.name(), "Allocated to a new cheque"));
+        return leaf;
+    }
+
+    /** The leaf a new cheque on this account would get now, or null (for the form; not reserved). */
+    @Transactional(readOnly = true)
+    public ChequeLeaf peekNextLeaf(Long accountId) {
+        ChequeLeaf leaf = leafRepository.peekNextUnused(accountId).orElse(null);
+        if (leaf != null) {
+            leaf.getBook().getNumberWidth();
+        }
+        return leaf;
     }
 
     /**

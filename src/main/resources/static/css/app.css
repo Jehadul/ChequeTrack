@@ -178,3 +178,9 @@ body {
     body { background: #fff; }
     .deposit-slip { border: none; }
 }
+
+/* Issued cheque page: the cheque as it will be written */
+.issued-cheque-face {
+    background: #fbfcf4;
+    border-left: 4px solid var(--app-brand);
+}

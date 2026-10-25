@@ -60,8 +60,9 @@ public class TransitionService {
     @Transactional
     public TransitionOutcome request(String recordType, Long recordId, String action, TransitionInput input) {
         LifecycleSupport support = support(recordType);
-        if (!CurrentUser.get().hasPermission(support.changePermission())) {
-            throw new AccessDeniedException("Missing permission " + support.changePermission());
+        String permission = support.permissionFor(action);
+        if (!CurrentUser.get().hasPermission(permission)) {
+            throw new AccessDeniedException("Missing permission " + permission);
         }
         LifecycleRecord record = support.load(recordId);
         Transition transition = allowedTransition(support.machine(), record, action);

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="${form.id == null} ? 'Write cheque' : 'Edit draft cheque'">Write cheque</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <h1 class="h4 mb-3"><i class="bi bi-box-arrow-up"></i>
+        <span th:text="${form.id == null} ? 'Write a cheque' : |Edit draft cheque ${draft.chequeNumber}|">Write a cheque</span></h1>
+    <div th:if="${form.reissueOfId}" class="alert alert-info py-2">
+        <i class="bi bi-arrow-repeat"></i> This cheque reissues a void or stopped cheque. It gets a new leaf.
+    </div>
+
+    <form th:action="${form.id == null} ? @{/issued} : @{/issued/{id}(id=${form.id})}" th:object="${form}" method="post"
+          novalidate style="max-width: 980px">
+        <input type="hidden" th:field="*{reissueOfId}">
+        <input type="hidden" th:field="*{version}">
+        <div th:replace="~{fragments/forms :: globalErrors}"></div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-white fw-semibold">Account and leaf</div>
+            <div class="card-body">
+                <div class="row align-items-end">
+                    <div class="col-md-6 mb-3">
+                        <label for="accountId" class="form-label">Pay from account <span class="text-danger">*</span></label>
+                        <select th:if="${form.id == null}" th:field="*{accountId}" class="form-select"
+                                th:classappend="${#fields.hasErrors('accountId')} ? 'is-invalid'">
+                            <option value="">Choose…</option>
+                            <option th:each="a : ${accounts}" th:value="${a.id}" th:text="${a.label}">Account</option>
+                        </select>
+                        <th:block th:if="${form.id != null}">
+                            <input type="hidden" th:field="*{accountId}">
+                            <div class="form-control-plaintext" th:text="${draft.account.label}">Account</div>
+                        </th:block>
+                        <div class="invalid-feedback" th:errors="*{accountId}"></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <th:block th:if="${form.id == null}">
+                            <div th:if="${form.accountId != null and nextLeaf != null}" class="small">
+                                Next free leaf: <span class="font-monospace fw-semibold" th:text="${nextLeaf}">0001</span>
+                                <div class="text-secondary">The leaf is reserved for you when you save; if someone else takes it first you get the next one.</div>
+                            </div>
+                            <div th:if="${form.accountId != null and nextLeaf == null}" class="text-danger small">
+                                No unused leaf left on this account. <a th:href="@{/chequebooks/new}">Add a cheque book</a>.
+                            </div>
+                        </th:block>
+                        <div th:if="${form.id != null}" class="small">Leaf <span class="font-monospace fw-semibold" th:text="${draft.chequeNumber}">0001</span>
+                            <span class="text-secondary">(fixed; cancel the draft to give the leaf back)</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-white fw-semibold">Cheque details</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="partyId" class="form-label">Supplier <span class="text-danger">*</span></label>
+                        <select th:field="*{partyId}" class="form-select" th:classappend="${#fields.hasErrors('partyId')} ? 'is-invalid'">
+                            <option value="">Choose…</option>
+                            <option th:each="p : ${suppliers}" th:value="${p.id}" th:text="${p.label}">Supplier</option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{partyId}"></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="payeeName" class="form-label">Pay to (name on the cheque)</label>
+                        <input type="text" th:field="*{payeeName}" class="form-control" maxlength="150" placeholder="The supplier's name">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="amount" class="form-label">Amount (Tk) <span class="text-danger">*</span></label>
+                        <input type="number" th:field="*{amount}" class="form-control text-end" min="0.01" step="0.01"
+                               th:classappend="${#fields.hasErrors('amount')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{amount}"></div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="chequeDate" class="form-label">Cheque date <span class="text-danger">*</span></label>
+                        <input type="date" th:field="*{chequeDate}" class="form-control" th:classappend="${#fields.hasErrors('chequeDate')} ? 'is-invalid'">
+                        <div class="form-text">A future date makes it a post-dated cheque (PDC).</div>
+                        <div class="invalid-feedback" th:errors="*{chequeDate}"></div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Crossing <span class="text-danger">*</span></label>
+                        <div th:each="x : ${crossings}" class="form-check">
+                            <input class="form-check-input" type="radio" th:field="*{crossing}" th:value="${x}">
+                            <label class="form-check-label" th:for="${#ids.prev('crossing')}" th:text="${x.label}" th:title="${x.description}">A/C Payee</label>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label for="narration" class="form-label">Narration</label>
+                    <input type="text" th:field="*{narration}" class="form-control" maxlength="300" placeholder="What the payment is for">
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-white fw-semibold">Bills this cheque pays <span class="fw-normal text-secondary small">(optional; settled when the cheque is handed over)</span></div>
+            <div class="card-body">
+                <p th:if="${form.partyId == null}" class="text-secondary small mb-0">Choose the supplier to see their open bills.</p>
+                <p th:if="${form.partyId != null and #lists.isEmpty(form.allocations)}" class="text-secondary small mb-0">This supplier has no open bills.</p>
+                <table class="table table-sm align-middle mb-0" th:unless="${#lists.isEmpty(form.allocations)}">
+                    <thead><tr><th>Bill</th><th class="text-end">Outstanding</th><th class="text-end" style="width: 12rem">Paid by this cheque (Tk)</th></tr></thead>
+                    <tbody>
+                    <tr th:each="a, it : *{allocations}">
+                        <td>
+                            <input type="hidden" th:field="*{allocations[__${it.index}__].openItemId}">
+                            <input type="hidden" th:field="*{allocations[__${it.index}__].number}">
+                            <input type="hidden" th:field="*{allocations[__${it.index}__].outstanding}">
+                            <span class="font-monospace" th:text="${a.number}">BILL-1</span>
+                        </td>
+                        <td class="amount" th:text="${@displayFormat.amount(a.outstanding)}">0.00</td>
+                        <td><input type="number" th:field="*{allocations[__${it.index}__].amount}" class="form-control form-control-sm text-end"
+                                   min="0" step="0.01" th:attr="max=${a.outstanding}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i>
+            <span th:text="${form.id == null} ? 'Save draft' : 'Save changes'">Save draft</span></button>
+        <a th:href="${form.id == null} ? @{/issued} : @{/issued/{id}(id=${form.id})}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+</th:block>
+
+<th:block layout:fragment="scripts">
+    <script th:inline="javascript">
+        // Choosing an account or supplier reloads the form (next free leaf, the supplier's open bills)
+        const editId = /*[[${form.id}]]*/ null;
+        function reload() {
+            const params = new URLSearchParams();
+            const party = $('#partyId').val();
+            if (party) params.set('partyId', party);
+            if (editId) {
+                window.location = /*[[@{/issued/}]]*/ '/issued/' + editId + '/edit?' + params.toString();
+                return;
+            }
+            const account = $('#accountId').val();
+            if (account) params.set('accountId', account);
+            const reissue = $('#reissueOfId').val();
+            if (reissue) params.set('reissueOf', reissue);
+            window.location = /*[[@{/issued/new}]]*/ '/issued/new' + '?' + params.toString();
+        }
+        $('#partyId').on('change', reload);
+        $('select#accountId').on('change', reload);
+    </script>
+</th:block>
+</body>
+</html>

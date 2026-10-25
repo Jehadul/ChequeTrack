@@ -22,6 +22,14 @@ public interface LifecycleSupport {
     String changePermission();
 
     /**
+     * Permission needed to ask for one action; {@link #changePermission()} unless a module
+     * restricts an action further (e.g. stop payment of issued cheques).
+     */
+    default String permissionFor(String action) {
+        return changePermission();
+    }
+
+    /**
      * Loads the record for a change, checking the current user may see it.
      * @throws com.chequetrack.common.exception.NotFoundException otherwise
      */

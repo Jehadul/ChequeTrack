@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 /** Branch-scoped: JPQL queries are limited by the branch filter automatically. */
 public interface ChequeLeafRepository extends JpaRepository<ChequeLeaf, Long> {
@@ -28,6 +29,31 @@ public interface ChequeLeafRepository extends JpaRepository<ChequeLeaf, Long> {
              WHERE b.id = :bookId
             """, nativeQuery = true)
     int createLeaves(@Param("bookId") Long bookId, @Param("now") Instant now, @Param("user") String user);
+
+    /**
+     * Locks the next unused leaf of an account (oldest active book first, lowest number) for the
+     * calling transaction. SKIP LOCKED makes a second user who asks at the same moment get the
+     * following leaf instead of waiting, so two cheques never share a number.
+     */
+    @Query(value = """
+            SELECT l.* FROM cheque_leaf l JOIN cheque_book b ON b.id = l.book_id
+             WHERE l.account_id = :accountId AND l.status = 'UNUSED' AND l.deleted = FALSE
+               AND b.status = 'ACTIVE' AND b.deleted = FALSE
+             ORDER BY b.received_date, b.id, l.leaf_number
+             LIMIT 1
+               FOR UPDATE OF l SKIP LOCKED
+            """, nativeQuery = true)
+    Optional<ChequeLeaf> lockNextUnused(@Param("accountId") Long accountId);
+
+    /** The leaf the next cheque would get (not locked; shown on the form only). */
+    @Query(value = """
+            SELECT l.* FROM cheque_leaf l JOIN cheque_book b ON b.id = l.book_id
+             WHERE l.account_id = :accountId AND l.status = 'UNUSED' AND l.deleted = FALSE
+               AND b.status = 'ACTIVE' AND b.deleted = FALSE
+             ORDER BY b.received_date, b.id, l.leaf_number
+             LIMIT 1
+            """, nativeQuery = true)
+    Optional<ChequeLeaf> peekNextUnused(@Param("accountId") Long accountId);
 
     @Query("select l from ChequeLeaf l where l.book.id = :bookId order by l.leafNumber")
     List<ChequeLeaf> findByBook(@Param("bookId") Long bookId);

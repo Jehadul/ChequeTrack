@@ -1,6 +1,6 @@
 # ChequeTrack – User Manual
 
-This manual explains how to use ChequeTrack and how its parts work together. It describes the system as built so far: setup, users, cheque books, invoices, received cheques, deposits, approvals, attachments and history. Issued cheques, printing, reminders, dashboard and reports are added later; see [What is coming](#13-what-is-coming).
+This manual explains how to use ChequeTrack and how its parts work together. It describes the system as built so far: setup, users, cheque books, invoices, received cheques, deposits, issued cheques, approvals, attachments and history. Printing on bank layouts, reminders, dashboard and reports are added later; see [What is coming](#14-what-is-coming).
 
 ---
 
@@ -13,18 +13,19 @@ This manual explains how to use ChequeTrack and how its parts work together. It 
 5. [One-time setup (Administrator)](#5-one-time-setup-administrator)
 6. [Customers, suppliers, invoices and bills](#6-customers-suppliers-invoices-and-bills)
 7. [Received cheques: day-to-day work](#7-received-cheques-day-to-day-work)
-8. [Approvals](#8-approvals)
-9. [Cheque books and leaves](#9-cheque-books-and-leaves)
-10. [Attachments (scans and documents)](#10-attachments-scans-and-documents)
-11. [History and the audit log](#11-history-and-the-audit-log)
-12. [Quick reference](#12-quick-reference)
-13. [What is coming](#13-what-is-coming)
+8. [Issued cheques: paying suppliers](#8-issued-cheques-paying-suppliers)
+9. [Approvals](#9-approvals)
+10. [Cheque books and leaves](#10-cheque-books-and-leaves)
+11. [Attachments (scans and documents)](#11-attachments-scans-and-documents)
+12. [History and the audit log](#12-history-and-the-audit-log)
+13. [Quick reference](#13-quick-reference)
+14. [What is coming](#14-what-is-coming)
 
 ---
 
 ## 1. What ChequeTrack does
 
-ChequeTrack keeps every cheque the company **receives** from customers, and every cheque book it **holds**, in one place. It records:
+ChequeTrack keeps every cheque the company **receives** from customers, every cheque it **writes** to suppliers, and every cheque book it **holds**, in one place. It records:
 
 - **where each cheque is now:** in hand, deposited, cleared, bounced…;
 - **what has to happen next:** for example, deposit on its date or present again;
@@ -63,7 +64,9 @@ The **menu on the left shows only what your role allows**. If you cannot find a 
  ─────────────                       ───────────────                          ───────
  Branches, users, roles ───────────► decides who sees and does what ────────► Audit log
                                                                               (every action)
- Banks + bank branches ──┬─► Company bank accounts ──► Cheque books ──► Leaves (M9: issue)
+ Suppliers ──► Bills ◄── settled ── Payment ◄── Hand over ◄── Issued cheque (one leaf each)
+                                                                     ▲
+ Banks + bank branches ──┬─► Company bank accounts ──► Cheque books ──► Leaves
    (routing numbers)     │                │
                          │                └──────────────────────┐
                          └─► Drawer bank of a received cheque    │
@@ -86,6 +89,7 @@ The main connections:
 
 - **Setup comes first.** A received cheque needs a **customer** and the drawer's **bank branch**. A deposit needs a **company bank account**. A cheque book needs a company bank account too. So set up banks, accounts and customers before daily work starts (section 5).
 - **Invoices and cheques are linked.** When you receive a cheque, you say which invoices it pays. When the cheque **clears**, those invoices are settled and a **receipt** is created. If the cheque **bounces** later, the receipt is cancelled and the invoices are **re-opened** automatically.
+- **Bills and issued cheques are linked the same way.** A cheque you write takes the next blank **leaf** of the account's cheque book and says which supplier **bills** it pays. When it is **handed over**, a **payment** is created and the bills are settled; if it is **voided** or **payment is stopped**, the payment is cancelled and the bills re-open.
 - **Settings and reason lists shape the rules.** Settings decide how long a cheque is valid, when to warn before it expires and how often it may be deferred. Reason lists give the choices when a cheque bounces, is deferred, returned and so on.
 - **Approval rules decide when a manager must agree.** Some changes (defer, write-off) wait for approval. The Accounts Manager sees them in the **Approvals** inbox.
 - **History is automatic.** Every change is written to the cheque's **status history** and the company **audit log**. Nobody can change or delete these records.
@@ -137,15 +141,15 @@ A cheque of Tk 3,00,000 needs only the Accounts Manager. A cheque of Tk 6,00,000
 
 - **Customers & suppliers** (Accounts menu): search by name or code, and filter customers or suppliers. Deactivating a party hides it from drop-down lists but keeps its history.
 - **Customer invoices** (Accounts → Customer invoices): money customers owe you. **Received cheques settle them.**
-- **Supplier bills** (Accounts → Supplier bills): money you owe suppliers. Issued cheques settle them (from M9).
+- **Supplier bills** (Accounts → Supplier bills): money you owe suppliers. **Issued cheques settle them** when handed over.
 
 An invoice or bill moves through these statuses:
 
 | Status | Meaning |
 |---|---|
 | **Open** | Nothing paid yet. Can still be edited. |
-| **Partly settled** | A cleared cheque paid part of it. |
-| **Settled** | Fully paid by cleared cheques. |
+| **Partly settled** | A cheque paid part of it (a cleared received cheque, or a handed-over issued cheque). |
+| **Settled** | Fully paid by cheques. |
 | **Cancelled** | Cancelled with a reason (only possible while nothing is settled). |
 
 The **Outstanding** column always shows what is still unpaid. Use **Attachments** on an invoice to keep a copy of the invoice or purchase order.
@@ -241,9 +245,61 @@ Tabs at the top (In hand, Deposited, Bounced, Cleared, Closed, All) and the filt
 
 ---
 
-## 8. Approvals
+## 8. Issued cheques: paying suppliers
 
-Some changes need a second person: currently **defer** and **write off** for received cheques, and later **issue, void, reprint and stop payment** for issued cheques. Who approves is decided by the approval rules (section 5).
+Menu: **Cheques → Issued cheques** and **Cheques → Supplier PDC register**.
+
+### 8.1 The life of an issued cheque
+
+```
+ Write ► DRAFT ── Submit ──► (PENDING APPROVAL) ──► APPROVED ── Print ──► PRINTED ── Hand over ──► ISSUED ── Mark cleared ──► CLEARED
+           │   ◄── rejected / withdrawn ──┘              │                    │                       │
+           │                                             │                    └── Void (approval) ────┤──► VOID     ─┐
+           └── Cancel ◄──────────────────────────────────┘                                            ├──► STOPPED  ─┴─► Reissue = new cheque, new leaf
+              (leaf back to stock)                                                Stop payment (approval)
+                                                                                  Defer (approval): date moves, stays Issued
+```
+
+### 8.2 Writing a cheque
+
+1. Issued cheques → **Write cheque**.
+2. Choose the **account** to pay from. The page shows the **next free leaf**, e.g. `CA 0001005`.
+3. Choose the **supplier**. Their **open bills** are listed. "Pay to" is the name written on the cheque; it is the supplier's name if left empty.
+4. Enter the **amount**, the **cheque date** (a future date makes it a post-dated cheque) and the **crossing**: *A/C Payee only* (paid only into the payee's account) or *Bearer*.
+5. Enter a **narration** (what the payment is for), and optionally how much of each bill the cheque pays.
+6. **Save draft.** The cheque gets its leaf now, and the leaf shows as **Allocated** in the cheque book. The amount is written in words automatically, e.g. *Taka Three Lakh Only*.
+
+**A number is never used twice.** If two people save a cheque on the same account at the same moment, each gets a **different** leaf, because the database locks the leaf for the first one and the second gets the next leaf.
+
+While it is a **draft** you can **Edit** it (everything except the account and the leaf). To throw it away, use **Cancel**: the blank leaf goes **back to stock** and will be used for the next cheque.
+
+### 8.3 Approval, printing and hand-over
+
+- **Submit for approval.** The approval rules for *Issue a cheque* decide who must approve (for example the Accounts Manager, and also the Administrator from Tk 5,00,000). The cheque shows **Pending approval**. If it is rejected or withdrawn, it goes back to **Draft**. With no rule, it is approved at once.
+- **Print.** Records that the cheque was written on its leaf; the leaf becomes **Used**. *(Printing directly on the bank's layout comes with cheque printing, M10.)*
+- **Hand over.** Enter **who collected** the cheque, the date, and optionally an ID number or courier reference. ChequeTrack then creates the **supplier payment** (e.g. **PAY-2026-00001**), dated on the cheque's due date, and **settles the linked bills**.
+- **Mark cleared.** When the bank statement shows the cheque paid, enter the date. It cannot be before the cheque date.
+
+### 8.4 Void, stop payment, defer and reissue
+
+| Action | When | What happens |
+|---|---|---|
+| **Void** | Printed or issued | Reason from the void list. **Goes for approval.** The leaf becomes **Void**; if it was handed over, the payment is cancelled and the bills re-open. |
+| **Stop payment** | Issued | Only users with the stop-payment permission (Accounts Manager, Administrator). Reason from the stop-payment list. **Goes for approval.** Tell the bank as well. The payment is cancelled and the bills re-open. |
+| **Defer** | Issued | The supplier agrees to present it later. New date after the current one, within the defer limit and before the cheque expires. **Goes for approval.** The payment date moves too. |
+| **Reissue** | Void or stopped | Opens a new cheque with the same details on a **new leaf**, linked to the old one. Each cheque can be reissued once. |
+
+### 8.5 Supplier PDC register
+
+Shows every cheque **handed over but not yet paid by the bank**, by due date, with totals: *due now*, *post-dated* and *total outstanding*. Badges show **Due in n days**, **Can be presented**, **Expires in n days**, **Stale** and **Deferred ×n**. Filter by supplier.
+
+The **Issued cheques** register has tabs (Drafts, To print, Printed, With payee, Cleared, Closed, All) and filters for supplier, account, date range and number or payee.
+
+---
+
+## 9. Approvals
+
+Some changes need a second person: **defer** and **write off** for received cheques, and **issue, void, defer and stop payment** for issued cheques (reprint follows with printing). Who approves is decided by the approval rules (section 5).
 
 **When you ask for such a change:**
 
@@ -268,9 +324,9 @@ Some changes need a second person: currently **defer** and **write off** for rec
 
 ---
 
-## 9. Cheque books and leaves
+## 10. Cheque books and leaves
 
-Menu: **Cheques → Cheque books** and **Leaf stock**. These are the company's own cheque books, used for issuing cheques from M9.
+Menu: **Cheques → Cheque books** and **Leaf stock**. These are the company's own cheque books, used for issuing cheques (section 8).
 
 **Adding a book:**
 
@@ -285,9 +341,9 @@ Menu: **Cheques → Cheque books** and **Leaf stock**. These are the company's o
 | Status | Meaning |
 |---|---|
 | Unused | Blank leaf in hand |
-| Allocated | Being used for a cheque right now (M9) |
-| Used | A cheque was written on it (M9) |
-| Void | Damaged or spoiled (reason recorded) |
+| Allocated | Taken by an issued cheque that is not printed yet |
+| Used | A cheque was printed on it |
+| Void | Damaged or spoiled (reason recorded), or its cheque was voided |
 | Cancelled / Lost | The book was cancelled or reported lost while the leaf was unused |
 
 **On a book's page:**
@@ -302,9 +358,9 @@ Menu: **Cheques → Cheque books** and **Leaf stock**. These are the company's o
 
 ---
 
-## 10. Attachments (scans and documents)
+## 11. Attachments (scans and documents)
 
-On a **received cheque** page (the Attachments panel) and on an **invoice or bill** (the **Attachments** button) you can upload:
+On a **received or issued cheque** page (the Attachments panel) and on an **invoice or bill** (the **Attachments** button) you can upload:
 
 - **PDF, JPEG or PNG**, up to **5 MB**. The system checks the real file type, not just the name;
 - a type (cheque scan, invoice, purchase order, deposit slip, other) and a short description.
@@ -313,9 +369,9 @@ Click a file name to open it in the browser, or the download button to save it. 
 
 ---
 
-## 11. History and the audit log
+## 12. History and the audit log
 
-**Status history (timeline):** every received cheque, invoice, cheque book and user has a timeline showing each status change with **who, when and why**. The timeline is on the right of the record's page.
+**Status history (timeline):** every received and issued cheque, invoice, cheque book and user has a timeline showing each status change with **who, when and why**. The timeline is on the right of the record's page.
 
 **Activity:** the record's page also lists every action on it (creation, edits with old → new values, attachments, approvals).
 
@@ -325,9 +381,9 @@ History and audit entries **can never be changed or deleted**, not even by the d
 
 ---
 
-## 12. Quick reference
+## 13. Quick reference
 
-### 12.1 Where to find things
+### 13.1 Where to find things
 
 | I want to… | Go to |
 |---|---|
@@ -336,7 +392,10 @@ History and audit entries **can never be changed or deleted**, not even by the d
 | Take cheques to the bank | Received cheques → Deposit (then Print slip) |
 | Record that a cheque cleared or bounced | Open the cheque → Next steps |
 | See cheques due soon or about to expire | Received cheques → In hand tab (badges) |
-| Approve a defer or write-off | Approvals |
+| Write a cheque to a supplier | Issued cheques → Write cheque |
+| Hand over, void or stop a cheque | Open the issued cheque → Next steps |
+| See supplier cheques not yet paid by the bank | Cheques → Supplier PDC register |
+| Approve a cheque, defer, void or write-off | Approvals |
 | See why a cheque changed | Open the cheque → Status history / Activity |
 | Add a cheque book | Cheques → Cheque books → New cheque book |
 | Check leaf stock | Cheques → Leaf stock |
@@ -345,7 +404,7 @@ History and audit entries **can never be changed or deleted**, not even by the d
 | Add a user or reset a password | Administration → Users |
 | See everything that happened | Audit → Audit log |
 
-### 12.2 Who can do what (built-in roles)
+### 13.2 Who can do what (built-in roles)
 
 | Area | Administrator | Accounts Manager | Cashier | Auditor |
 |---|:---:|:---:|:---:|:---:|
@@ -355,12 +414,14 @@ History and audit entries **can never be changed or deleted**, not even by the d
 | Customers, suppliers, invoices, bills | ✔ | ✔ | ✔ | view |
 | Cheque books and leaves | ✔ | ✔ | ✔ | view |
 | Received cheques and deposits | ✔ | ✔ | ✔ | view |
+| Issued cheques (write, print, hand over, void, defer) | ✔ | ✔ | ✔ | view |
+| Stop payment of an issued cheque | ✔ | ✔ | – | – |
 | Decide approvals | ✔ | ✔ | – | – |
 | Audit log | ✔ | – | – | ✔ |
 
 Administrators can change these permissions under Roles & permissions (except for the Administrator role itself).
 
-### 12.3 Common messages
+### 13.3 Common messages
 
 | Message | What it means / what to do |
 |---|---|
@@ -369,6 +430,8 @@ Administrators can change these permissions under Roles & permissions (except fo
 | "… has already been entered." | The same bank, account and cheque number exists. Search for it in Received cheques. |
 | "… cannot be deposited before that date." | It is a post-dated cheque. Deposit it on or after its date. |
 | "… is stale …" | Older than 180 days. Ask the customer for a new cheque (Replace). |
+| "No unused cheque leaf left for …" | The account's cheque books are used up. Add a new cheque book. |
+| "Only a draft cheque can be changed." | After submitting, details are fixed. Void or cancel it and write a new one. |
 | "You cannot approve or reject your own request." | Another approver of the right role must decide. |
 | "This record was changed by another user…" | Someone saved it before you. Reload the page and repeat your change. |
 | "Page not found" for a record you know exists | It belongs to a branch you do not have access to. |
@@ -376,11 +439,10 @@ Administrators can change these permissions under Roles & permissions (except fo
 
 ---
 
-## 13. What is coming
+## 14. What is coming
 
 | Part | What it adds |
 |---|---|
-| Issued cheques (M9) | Writing cheques to suppliers from the cheque books: one leaf per cheque (a number is never used twice), amount in words, approval before printing, hand-over, void, stop payment, reissue, supplier PDC register. |
 | Cheque printing (M10) | Printing directly onto each bank's leaf, with layouts set up on screen (drag-and-drop designer, preview, test print, printer adjustment). |
 | Reminders (M11) | Daily branch emails and alerts: cheques due, bounced, near expiry, deferred too often, low stock. |
 | Dashboard (M12) | Cheques in hand, due this week, bounced this month, 12-week money in/out. |

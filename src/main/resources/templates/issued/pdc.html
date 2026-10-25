@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Supplier PDC register</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-calendar-week"></i> Supplier PDC register</h1>
+        <a th:href="@{/issued}" class="btn btn-link btn-sm ms-auto"><i class="bi bi-arrow-left"></i> Issued cheques</a>
+    </div>
+    <p class="text-secondary small">Cheques handed over to suppliers that our bank has not paid yet, by due date.
+        The payment is booked on the due date; a deferred cheque moves its payment with it.</p>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-4"><div class="card"><div class="card-body">
+            <div class="small text-secondary">Due now (dated today or earlier)</div>
+            <div class="fs-5 fw-semibold" th:text="|Tk ${@displayFormat.amount(dueNow)}|">Tk 0.00</div>
+        </div></div></div>
+        <div class="col-md-4"><div class="card"><div class="card-body">
+            <div class="small text-secondary">Post-dated (future dates)</div>
+            <div class="fs-5 fw-semibold" th:text="|Tk ${@displayFormat.amount(postDated)}|">Tk 0.00</div>
+        </div></div></div>
+        <div class="col-md-4"><div class="card"><div class="card-body">
+            <div class="small text-secondary">Total outstanding</div>
+            <div class="fs-5 fw-semibold" th:text="|Tk ${@displayFormat.amount(total)}|">Tk 0.00</div>
+        </div></div></div>
+    </div>
+
+    <form th:action="@{/issued/pdc}" method="get" class="row g-2 mb-3">
+        <div class="col-md-4">
+            <select name="partyId" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">All suppliers</option>
+                <option th:each="p : ${suppliers}" th:value="${p.id}" th:text="${p.name}" th:selected="${p.id == partyId}">Supplier</option>
+            </select>
+        </div>
+    </form>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Due date</th>
+                    <th>Cheque no.</th>
+                    <th>Supplier</th>
+                    <th>Account</th>
+                    <th>Payment</th>
+                    <th class="text-end">Amount</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="c : ${cheques}" th:with="e=${expiry[c.id]}">
+                    <td class="text-nowrap">
+                        <span th:text="${@displayFormat.date(c.chequeDate)}">01/01/2026</span>
+                        <div class="small text-secondary" th:if="${c.chequeDate != c.originalDate}"
+                             th:text="|written ${@displayFormat.date(c.originalDate)}|"></div>
+                    </td>
+                    <td><a class="fw-semibold font-monospace" th:href="@{/issued/{id}(id=${c.id})}" th:text="${c.chequeNumber}">0001</a></td>
+                    <td th:text="${c.party.name}">Supplier</td>
+                    <td class="small" th:text="${c.account.label}">Account</td>
+                    <td class="small font-monospace" th:text="${c.payment != null} ? ${c.payment.number} : '-'">PAY</td>
+                    <td class="amount" th:text="${@displayFormat.amount(c.amount)}">0.00</td>
+                    <td class="text-nowrap">
+                        <span th:if="${e.dueIn > 0}" class="badge text-bg-primary" th:text="|Due in ${e.dueIn}d|">Due</span>
+                        <span th:if="${e.dueIn <= 0 and !e.stale}" class="badge text-bg-info">Can be presented</span>
+                        <span th:if="${e.stale}" class="badge text-bg-danger">Stale</span>
+                        <span th:if="${e.nearExpiry}" class="badge text-bg-warning" th:text="|Expires in ${e.daysLeft}d|">Expiring</span>
+                        <span th:if="${c.deferCount > 0}" class="badge text-bg-light border" th:text="|Deferred ×${c.deferCount}|">Deferred</span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(cheques)}">
+                    <td colspan="7" class="text-center text-secondary py-4">No cheques outstanding with suppliers.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

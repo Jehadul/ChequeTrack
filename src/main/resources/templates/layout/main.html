@@ -63,11 +63,15 @@
             <a sec:authorize="!hasAuthority('APPROVAL_DECIDE')" class="nav-link" th:href="@{/approvals/mine}">
                 <i class="bi bi-inbox me-2"></i>My approval requests</a>
 
-            <div sec:authorize="hasAnyAuthority('CHEQUEBOOK_VIEW','RECEIVED_VIEW')" class="nav-section">Cheques</div>
+            <div sec:authorize="hasAnyAuthority('CHEQUEBOOK_VIEW','RECEIVED_VIEW','ISSUED_VIEW')" class="nav-section">Cheques</div>
             <a sec:authorize="hasAuthority('RECEIVED_VIEW')" class="nav-link" th:href="@{/received}">
                 <i class="bi bi-box-arrow-in-down me-2"></i>Received cheques</a>
             <a sec:authorize="hasAuthority('RECEIVED_VIEW')" class="nav-link" th:href="@{/received/deposits}">
                 <i class="bi bi-bank me-2"></i>Deposits</a>
+            <a sec:authorize="hasAuthority('ISSUED_VIEW')" class="nav-link" th:href="@{/issued}">
+                <i class="bi bi-box-arrow-up me-2"></i>Issued cheques</a>
+            <a sec:authorize="hasAuthority('ISSUED_VIEW')" class="nav-link" th:href="@{/issued/pdc}">
+                <i class="bi bi-calendar-week me-2"></i>Supplier PDC register</a>
             <a class="nav-link" th:href="@{/lifecycle}"><i class="bi bi-diagram-2 me-2"></i>Cheque lifecycle</a>
             <a sec:authorize="hasAuthority('CHEQUEBOOK_VIEW')" class="nav-link" th:href="@{/chequebooks}">
                 <i class="bi bi-journal-bookmark me-2"></i>Cheque books</a>

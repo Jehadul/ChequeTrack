@@ -214,14 +214,14 @@ Acceptance test: `bash scripts/e2e/m3-audit.sh` (39 checks; run `m2-authorizatio
 **Proposal ref:** 4.3
 **Demo:** two users allocate a leaf at the same time and get different numbers; create → approve → issue → void.
 
-- [ ] **Leaf allocation:** the next unused leaf is locked for one user (database lock), so a number is never used twice
-- [ ] **Cheque details:** payee, amount, amount in words, crossing (A/C Payee or bearer), cheque date, **narration** *(README)*, linked payment, attachments
-- [ ] Multi-level approval before printing (M4 rules, M7 engine) *(README)*
-- [ ] **Supplier PDC register:** status, defer history, payment on the due date
-- [ ] **Hand-over:** who collected the cheque and when
-- [ ] **Void:** cancels the linked payment and marks the leaf void
-- [ ] **Stop payment** (requested by the Accounts Manager) and **reissue**
-- [ ] Issued cheque register (list with search and filters)
+- [x] **Leaf allocation:** the next unused leaf is locked for one user (database lock), so a number is never used twice
+- [x] **Cheque details:** payee, amount, amount in words, crossing (A/C Payee or bearer), cheque date, **narration** *(README)*, linked payment, attachments
+- [x] Multi-level approval before printing (M4 rules, M7 engine) *(README)*
+- [x] **Supplier PDC register:** status, defer history, payment on the due date
+- [x] **Hand-over:** who collected the cheque and when
+- [x] **Void:** cancels the linked payment and marks the leaf void
+- [x] **Stop payment** (requested by the Accounts Manager) and **reissue**
+- [x] Issued cheque register (list with search and filters)
 
 ## M10. Cheque printing through dynamic settings (core feature)
 

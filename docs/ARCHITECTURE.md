@@ -126,6 +126,20 @@ ApprovalService.approve() ── last step ──► TransitionService.executeAp
 - A deposit batch calls the engine once per cheque inside one transaction, so a single refused cheque rolls the whole batch back.
 - `DocumentNumberService` hands out numbers (`RCPT-2026-00001`, `DEP-…`) with one atomic `INSERT … ON CONFLICT DO UPDATE … RETURNING` on `doc_sequence`. The row stays locked until the transaction ends, so numbers are never duplicated.
 
+### Issued cheques (M9) on the engine
+
+- **Leaf allocation.** Saving a draft calls `ChequeBookService.allocateNextLeaf` (propagation `MANDATORY`), which runs `SELECT … FOR UPDATE OF l SKIP LOCKED LIMIT 1` on the account's unused leaves (oldest active book first). A second user at the same moment skips the locked row and gets the next leaf instead of waiting. The partial unique index `ux_issued_cheque_leaf (leaf_id) WHERE status <> 'CANCELLED'` is the database guarantee: one live cheque per leaf.
+- **The leaf follows the cheque.** The leaf goes from Unused to Allocated when the draft is saved. Print sets it to Used, and `finishIfEmpty` then runs on the book. Cancel (only before printing) sets it back to Unused, so the blank leaf is used next. Void sets it to Void.
+- `IssuedChequeLifecycle.beforeChange`:
+  - HAND_OVER creates the `payment` (`PAY-yyyy-nnnnn`, dated on the cheque date) and settles the bills.
+  - DEFER moves the cheque date and the payment date, within the defer limit and the expiry date.
+  - CLEAR refuses dates before the cheque date.
+  - VOID and STOP_PAYMENT cancel the payment and reverse exactly what was settled (`issued_cheque_bill.settled_amount`).
+  - REPRINT is refused until M10.
+- **Per-action permission.** `LifecycleSupport.permissionFor(action)` is a default method returning `changePermission()`. Issued cheques override it so STOP_PAYMENT needs `ISSUED_STOP_PAYMENT` (Accounts Manager and Admin only).
+- **Reissue** is a new draft with `reissue_of_id`. A partial unique index allows one live reissue per cheque.
+- `amount_in_words` is computed once by `AmountInWords` (crore / lakh system) and stored, so what was approved is what gets printed.
+
 ## 6a. Audit trail and status history (built in M3)
 
 ```
@@ -153,7 +167,7 @@ Spring Security (login, failure, logout events) ──────────�
 - Leaves are created by one `INSERT … SELECT … generate_series(first, last)` statement.
 - **No number twice:** the service checks for overlapping books with a friendly message, using native SQL so books of other branches are included. The guarantee is the unique index `(account_id, prefix, leaf_number)`. If two users save overlapping books at the same moment, one succeeds and the other gets the overlap message.
 - Leaf changes write `status_history`. Closing a book updates its unused leaves in one statement and records one history entry on the book with the count.
-- `ChequeBookService.finishIfEmpty` marks a book FINISHED; M9 calls it after using a leaf.
+- `ChequeBookService.finishIfEmpty` marks a book FINISHED; M9 calls it after printing on a leaf. `allocateNextLeaf` / `peekNextLeaf` are the only way M9 takes leaves.
 - "Missing numbers" are reported as **skipped leaves**: unused leaves below the highest used or voided leaf of the same book.
 
 ## 7. Error handling
