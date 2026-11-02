@@ -21,7 +21,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Read-only access to the audit log and status history. */
 @Service
 public class AuditQueryService {
 
@@ -32,14 +31,17 @@ public class AuditQueryService {
     private final Clock clock;
 
     public AuditQueryService(AuditLogRepository auditLogRepository,
-                             StatusHistoryRepository statusHistoryRepository,
-                             Clock clock) {
+            StatusHistoryRepository statusHistoryRepository,
+            Clock clock) {
         this.auditLogRepository = auditLogRepository;
         this.statusHistoryRepository = statusHistoryRepository;
         this.clock = clock;
     }
 
-    /** Audit log of the user's company, newest first. Failed logins with unknown usernames are included. */
+    /**
+     * Audit log of the user's company, newest first. Failed logins with unknown
+     * usernames are included.
+     */
     @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('" + AuditPermissions.AUDIT_VIEW + "')")
     public Page<AuditLogEntry> search(AuditFilter filter, int page) {
@@ -56,7 +58,8 @@ public class AuditQueryService {
                         filter.to().plusDays(1).atStartOfDay(clock.getZone()).toInstant()));
             }
             if (notBlank(filter.username())) {
-                p.add(cb.like(cb.lower(root.get("username")), "%" + escapeLike(filter.username().trim().toLowerCase()) + "%", '\\'));
+                p.add(cb.like(cb.lower(root.get("username")),
+                        "%" + escapeLike(filter.username().trim().toLowerCase()) + "%", '\\'));
             }
             if (notBlank(filter.action())) {
                 p.add(cb.equal(root.get("action"), filter.action()));
@@ -91,7 +94,9 @@ public class AuditQueryService {
                 CurrentUser.get().getCompanyId(), entityType, String.valueOf(entityId), Limit.of(max));
     }
 
-    /** Full status history of one record, oldest first. Same access rule as above. */
+    /**
+     * Full status history of one record, oldest first. Same access rule as above.
+     */
     @Transactional(readOnly = true)
     public List<StatusHistoryEntry> statusHistory(String entityType, Long entityId) {
         return statusHistoryRepository.findByCompanyIdAndEntityTypeAndEntityIdOrderByChangedAtAscIdAsc(

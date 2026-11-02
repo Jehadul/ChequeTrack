@@ -16,12 +16,6 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 
-/**
- * Counts failed logins and locks the account when the limit is reached.
- * Applies to both the web login form and the API login, because both use the
- * same AuthenticationManager. Requests made with an API token are not logins
- * and are ignored here.
- */
 @Slf4j
 @Component
 public class LoginAttemptListener {
@@ -32,9 +26,9 @@ public class LoginAttemptListener {
     private final ApplicationEventPublisher events;
 
     public LoginAttemptListener(AppUserRepository userRepository,
-                                SecurityProperties properties,
-                                Clock clock,
-                                ApplicationEventPublisher events) {
+            SecurityProperties properties,
+            Clock clock,
+            ApplicationEventPublisher events) {
         this.userRepository = userRepository;
         this.properties = properties;
         this.clock = clock;
@@ -49,7 +43,8 @@ public class LoginAttemptListener {
         userRepository.registerFailedLogin(username, properties.lockout().maxFailedAttempts(), lockUntil);
         log.info("Failed login for '{}'", username);
 
-        // The counter restarts at 0 when the lock is applied, so "locked and 0 attempts" means "just locked"
+        // The counter restarts at 0 when the lock is applied, so "locked and 0
+        // attempts" means "just locked"
         userRepository.findByUsername(username)
                 .filter(u -> u.isLockedAt(clock.instant()) && u.getFailedLoginAttempts() == 0)
                 .ifPresent(u -> events.publishEvent(AuditEvent.of("ACCOUNT_LOCKED", "User", u.getId(),

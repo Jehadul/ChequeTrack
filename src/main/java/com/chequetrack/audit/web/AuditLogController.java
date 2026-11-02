@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDate;
 
-/** Read-only, filterable audit log for administrators and auditors. */
 @Controller
 @RequestMapping("/audit")
 @PreAuthorize("hasAuthority('" + AuditPermissions.AUDIT_VIEW + "')")
@@ -29,12 +28,12 @@ public class AuditLogController {
 
     @GetMapping
     public String log(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-                      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-                      @RequestParam(required = false) String username,
-                      @RequestParam(required = false) String action,
-                      @RequestParam(required = false) String entityType,
-                      @RequestParam(defaultValue = "0") int page,
-                      Model model) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) String action,
+            @RequestParam(required = false) String entityType,
+            @RequestParam(defaultValue = "0") int page,
+            Model model) {
         AuditFilter filter = new AuditFilter(from, to, username, action, entityType);
         Page<AuditLogEntry> entries = auditQueryService.search(filter, page);
         model.addAttribute("filter", filter);

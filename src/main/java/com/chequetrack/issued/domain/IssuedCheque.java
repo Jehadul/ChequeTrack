@@ -31,11 +31,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * A cheque the company writes on one of its leaves. Details can be edited while it is a
- * draft; afterwards its status only changes through the lifecycle engine, which calls
- * the change methods below from IssuedChequeLifecycle inside one transaction.
- */
 @Getter
 @Entity
 @Table(name = "issued_cheque")
@@ -130,9 +125,10 @@ public class IssuedCheque extends BranchScopedEntity implements LifecycleRecord 
 
     /** Sets what is written on the cheque. Only while it is a draft. */
     public void details(Party party, String payeeName, BigDecimal amount, Crossing crossing, LocalDate chequeDate,
-                        String narration) {
+            String narration) {
         if (status != IssuedStatus.DRAFT) {
-            throw new BusinessException("Only a draft cheque can be changed. This cheque is " + status.getLabel().toLowerCase() + ".");
+            throw new BusinessException(
+                    "Only a draft cheque can be changed. This cheque is " + status.getLabel().toLowerCase() + ".");
         }
         this.party = party;
         this.payeeName = payeeName == null || payeeName.isBlank() ? party.getName() : payeeName.trim();
@@ -144,7 +140,10 @@ public class IssuedCheque extends BranchScopedEntity implements LifecycleRecord 
         this.narration = Text.clean(narration);
     }
 
-    /** Removes the bill links before they are entered again (flush before re-adding the same bill). */
+    /**
+     * Removes the bill links before they are entered again (flush before re-adding
+     * the same bill).
+     */
     public void clearBills() {
         bills.clear();
     }
@@ -153,7 +152,8 @@ public class IssuedCheque extends BranchScopedEntity implements LifecycleRecord 
         bills.add(new IssuedChequeBill(this, bill, amount));
     }
 
-    // ---- LifecycleRecord ------------------------------------------------------------------------
+    // ---- LifecycleRecord
+    // ------------------------------------------------------------------------
 
     @Override
     public String lifecycleStatus() {
@@ -175,7 +175,8 @@ public class IssuedCheque extends BranchScopedEntity implements LifecycleRecord 
         return "Cheque " + chequeNumber + " · " + payeeName;
     }
 
-    // ---- changes: called only by IssuedChequeLifecycle (inside a lifecycle transition) -----------
+    // ---- changes: called only by IssuedChequeLifecycle (inside a lifecycle
+    // transition) -----------
 
     public void printed(Instant at) {
         this.printCount++;
@@ -208,13 +209,19 @@ public class IssuedCheque extends BranchScopedEntity implements LifecycleRecord 
         leaf.release();
     }
 
-    /** Voided after printing: the leaf is void, the payment cancelled and the bills re-opened. */
+    /**
+     * Voided after printing: the leaf is void, the payment cancelled and the bills
+     * re-opened.
+     */
     public void voided(String reason) {
         leaf.voidWithCheque();
         reversePayment("Cheque voided: " + reason);
     }
 
-    /** Payment stopped at the bank: the payment is cancelled and the bills re-opened (the leaf stays used). */
+    /**
+     * Payment stopped at the bank: the payment is cancelled and the bills re-opened
+     * (the leaf stays used).
+     */
     public void stopped(String reason) {
         reversePayment("Payment stopped: " + reason);
     }
@@ -226,7 +233,8 @@ public class IssuedCheque extends BranchScopedEntity implements LifecycleRecord 
         bills.forEach(IssuedChequeBill::reverse);
     }
 
-    // ---- derived values for pages ---------------------------------------------------------------
+    // ---- derived values for pages
+    // ---------------------------------------------------------------
 
     /** Last day the bank accepts the cheque (written date + validity days). */
     public LocalDate expiryDate(int validityDays) {

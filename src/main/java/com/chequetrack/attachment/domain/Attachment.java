@@ -14,11 +14,6 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.type.SqlTypes;
 
-/**
- * Metadata of an uploaded file linked to a record ({@code ownerType} + {@code ownerId}).
- * The bytes live on disk under {@code storageKey}. Removing an attachment only
- * marks the row deleted; the file is kept.
- */
 @Getter
 @Entity
 @Table(name = "attachment")
@@ -51,7 +46,10 @@ public class Attachment extends BaseEntity {
     @Column(name = "size_bytes", nullable = false, updatable = false)
     private long sizeBytes;
 
-    /** Hex SHA-256 of the file, to detect damaged or swapped files. Always 64 characters, hence CHAR(64). */
+    /**
+     * Hex SHA-256 of the file, to detect damaged or swapped files. Always 64
+     * characters, hence CHAR(64).
+     */
     @JdbcTypeCode(SqlTypes.CHAR)
     @Column(nullable = false, length = 64, updatable = false)
     private String sha256;
@@ -63,8 +61,8 @@ public class Attachment extends BaseEntity {
     private String description;
 
     public static Attachment create(Long companyId, Long branchId, String ownerType, Long ownerId,
-                                    AttachmentCategory category, String originalFilename, String contentType,
-                                    long sizeBytes, String sha256, String storageKey, String description) {
+            AttachmentCategory category, String originalFilename, String contentType,
+            long sizeBytes, String sha256, String storageKey, String description) {
         Attachment a = new Attachment();
         a.companyId = companyId;
         a.branchId = branchId;

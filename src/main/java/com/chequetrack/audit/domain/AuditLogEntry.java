@@ -17,7 +17,6 @@ import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 import java.util.Map;
 
-/** One audit log row. Append-only: the database refuses updates and deletes. */
 @Getter
 @Entity
 @Immutable
@@ -62,8 +61,8 @@ public class AuditLogEntry {
 
     @Builder
     private AuditLogEntry(Instant occurredAt, Long companyId, Long userId, String username, String action,
-                          String entityType, String entityId, String summary, Map<String, Object> details,
-                          String ipAddress) {
+            String entityType, String entityId, String summary, Map<String, Object> details,
+            String ipAddress) {
         this.occurredAt = occurredAt;
         this.companyId = companyId;
         this.userId = userId;

@@ -10,10 +10,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
 
-/**
- * Fills created_by / updated_by on every entity with the logged-in username.
- * Work done with nobody logged in (startup, scheduled jobs) is recorded as "system".
- */
 @Configuration
 @EnableJpaAuditing(auditorAwareRef = "auditorAware")
 public class JpaAuditingConfig {

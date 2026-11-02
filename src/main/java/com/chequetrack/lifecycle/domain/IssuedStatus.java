@@ -1,6 +1,5 @@
 package com.chequetrack.lifecycle.domain;
 
-/** Stages of a cheque the company writes to a supplier. Rules in {@link ChequeLifecycles#ISSUED}. */
 public enum IssuedStatus implements LifecycleStatus {
     DRAFT("Draft", "Being prepared; can still be edited", false),
     PENDING_APPROVAL("Pending approval", "Waiting for the approvals its amount needs", false),

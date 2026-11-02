@@ -8,12 +8,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-/**
- * History tab of a user. Lives in the audit module because the organization
- * module (M2) may not depend on it. Access is checked by loading the user
- * through UserManagementService first: same permission and branch rules,
- * and an invisible user answers 404.
- */
 @Controller
 public class UserHistoryController {
 

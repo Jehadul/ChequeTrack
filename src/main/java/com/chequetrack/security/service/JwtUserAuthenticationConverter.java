@@ -10,11 +10,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
-/**
- * Turns a verified JWT into the current user. The user is reloaded on every
- * request, so disabling or locking an account takes effect immediately
- * instead of when the token expires.
- */
 @Component
 public class JwtUserAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 

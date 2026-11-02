@@ -15,10 +15,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLRestriction;
 
-/**
- * One cheque leaf. Created in bulk with its book (see ChequeLeafRepository#createLeaves).
- * A unique index on (account, prefix, number) guarantees a number exists only once.
- */
 @Getter
 @Entity
 @Table(name = "cheque_leaf")
@@ -43,17 +39,14 @@ public class ChequeLeaf extends BranchScopedEntity {
     @Column(nullable = false, length = 20)
     private LeafStatus status;
 
-    /** A damaged or spoiled leaf that was never written on. */
     public void voidUnused() {
         if (status != LeafStatus.UNUSED) {
-            throw new BusinessException("Only unused leaves can be voided here. Issued cheques are voided from the cheque itself.");
+            throw new BusinessException(
+                    "Only unused leaves can be voided here. Issued cheques are voided from the cheque itself.");
         }
         this.status = LeafStatus.VOID;
     }
 
-    // ---- used by issued cheques (M9) ------------------------------------------------------------
-
-    /** Reserved for a cheque being prepared. The caller holds a row lock (see ChequeLeafRepository#lockNextUnused). */
     public void allocate() {
         if (status != LeafStatus.UNUSED) {
             throw new BusinessException("Leaf " + getDisplayNumber() + " is no longer free.");
@@ -61,14 +54,12 @@ public class ChequeLeaf extends BranchScopedEntity {
         this.status = LeafStatus.ALLOCATED;
     }
 
-    /** The cheque was cancelled before printing: the blank leaf goes back to stock. */
     public void release() {
         if (status == LeafStatus.ALLOCATED) {
             this.status = LeafStatus.UNUSED;
         }
     }
 
-    /** The cheque was printed on this leaf. */
     public void markUsed() {
         if (status != LeafStatus.ALLOCATED && status != LeafStatus.USED) {
             throw new BusinessException("Leaf " + getDisplayNumber() + " is " + status.name().toLowerCase() + ".");
@@ -76,12 +67,10 @@ public class ChequeLeaf extends BranchScopedEntity {
         this.status = LeafStatus.USED;
     }
 
-    /** The cheque written on this leaf was voided. */
     public void voidWithCheque() {
         this.status = LeafStatus.VOID;
     }
 
-    /** The book was cancelled or lost while this leaf was unused. */
     public void closeWithBook(BookStatus bookStatus) {
         if (status == LeafStatus.UNUSED) {
             this.status = bookStatus == BookStatus.LOST ? LeafStatus.LOST : LeafStatus.CANCELLED;

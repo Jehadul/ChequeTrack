@@ -7,10 +7,6 @@ import org.springframework.context.annotation.Configuration;
 import java.time.Clock;
 import java.time.ZoneId;
 
-/**
- * Single source of "now". Code asks this clock instead of calling Instant.now()
- * so rules that depend on time (lockout, expiry, due dates) can be tested.
- */
 @Configuration
 public class ClockConfig {
 

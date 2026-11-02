@@ -11,10 +11,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-/**
- * Formatting helpers for templates, used as {@code ${@displayFormat.ts(entry.occurredAt)}}.
- * Timestamps are stored in UTC and shown in the business time zone.
- */
 @Component
 public class DisplayFormat {
 
@@ -66,7 +62,9 @@ public class DisplayFormat {
         return (scaled.signum() < 0 ? "-" : "") + grouped + plain.substring(dot);
     }
 
-    /** A value from an audit change: lists are joined, empty values shown as a dash. */
+    /**
+     * A value from an audit change: lists are joined, empty values shown as a dash.
+     */
     public String value(Object value) {
         if (value == null) {
             return "—";

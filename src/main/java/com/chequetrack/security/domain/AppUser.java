@@ -18,14 +18,6 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * A person who can log in. Login counters (failed attempts, lock, last login)
- * are changed with direct UPDATE statements in {@code AppUserRepository} so
- * that concurrent logins never clash with the optimistic-lock version.
- *
- * <p>Company, role and branches are stored as plain ids: the organization
- * module (M2) owns those tables, and this module must not depend on it.
- */
 @Getter
 @Entity
 @Table(name = "app_user")
@@ -91,7 +83,7 @@ public class AppUser extends BaseEntity {
 
     /** New user with a temporary password that must be changed at first login. */
     public static AppUser create(String username, String fullName, String email, String passwordHash,
-                                 Long companyId, Instant now) {
+            Long companyId, Instant now) {
         AppUser user = new AppUser();
         user.username = normalizeUsername(username);
         user.passwordHash = passwordHash;
@@ -107,7 +99,10 @@ public class AppUser extends BaseEntity {
         this.email = email == null || email.isBlank() ? null : email.trim().toLowerCase();
     }
 
-    /** Sets role and branch access. The home branch is always one of the allowed branches. */
+    /**
+     * Sets role and branch access. The home branch is always one of the allowed
+     * branches.
+     */
     public void assignAccess(Long roleId, Long homeBranchId, boolean allBranches, Collection<Long> branchIds) {
         Set<Long> newBranches = new HashSet<>(branchIds == null ? Set.of() : branchIds);
         newBranches.add(Objects.requireNonNull(homeBranchId));
@@ -132,7 +127,10 @@ public class AppUser extends BaseEntity {
         this.mustChangePassword = false;
     }
 
-    /** An administrator set a temporary password; the user must change it at next login. */
+    /**
+     * An administrator set a temporary password; the user must change it at next
+     * login.
+     */
     public void resetPassword(String temporaryHash, Instant now) {
         this.passwordHash = temporaryHash;
         this.passwordChangedAt = now;

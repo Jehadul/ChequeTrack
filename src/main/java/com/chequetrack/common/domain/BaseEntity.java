@@ -17,21 +17,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.Instant;
 import java.util.Objects;
 
-/**
- * Parent of every entity. Provides the identity key, audit columns filled by
- * JPA auditing, an optimistic-lock version and a soft-delete flag.
- *
- * <p>Matching columns every table must have:
- * <pre>
- *   id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
- *   created_at  TIMESTAMPTZ  NOT NULL,
- *   created_by  VARCHAR(100) NOT NULL,
- *   updated_at  TIMESTAMPTZ  NOT NULL,
- *   updated_by  VARCHAR(100) NOT NULL,
- *   version     BIGINT       NOT NULL DEFAULT 0,
- *   deleted     BOOLEAN      NOT NULL DEFAULT FALSE
- * </pre>
- */
 @Getter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
@@ -57,7 +42,10 @@ public abstract class BaseEntity {
     @Column(name = "updated_by", nullable = false, length = 100)
     private String updatedBy;
 
-    /** Optimistic lock: a stale update fails instead of silently overwriting another user's change. */
+    /**
+     * Optimistic lock: a stale update fails instead of silently overwriting another
+     * user's change.
+     */
     @Version
     @Column(name = "version", nullable = false)
     private Long version;
@@ -86,8 +74,10 @@ public abstract class BaseEntity {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || org.hibernate.Hibernate.getClass(this) != org.hibernate.Hibernate.getClass(o)) return false;
+        if (this == o)
+            return true;
+        if (o == null || org.hibernate.Hibernate.getClass(this) != org.hibernate.Hibernate.getClass(o))
+            return false;
         BaseEntity other = (BaseEntity) o;
         return id != null && Objects.equals(id, other.id);
     }

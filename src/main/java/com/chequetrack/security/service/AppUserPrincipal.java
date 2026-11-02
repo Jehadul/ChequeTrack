@@ -13,14 +13,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-/**
- * The logged-in user as Spring Security sees it, for both web sessions and API tokens.
- * A snapshot taken at login and refreshed when the user's access stamp changes.
- * It is stored in the HTTP session, so every field must be serializable.
- *
- * <p>Authorities are the role's permission codes (e.g. {@code USER_MANAGE})
- * plus {@code ROLE_<code>}. Code should check permissions, not roles.
- */
 @Getter
 public class AppUserPrincipal implements UserDetails, CredentialsContainer {
 

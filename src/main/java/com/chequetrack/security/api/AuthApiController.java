@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** API login: exchange username and password for a bearer token. */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthApiController {
@@ -40,7 +39,6 @@ public class AuthApiController {
         return new TokenResponse(token.value(), "Bearer", token.expiresInSeconds());
     }
 
-    /** Who am I? Useful to test a token. */
     @GetMapping("/me")
     public MeResponse me(@AuthenticationPrincipal AppUserPrincipal user) {
         return new MeResponse(user.getId(), user.getUsername(), user.getFullName());

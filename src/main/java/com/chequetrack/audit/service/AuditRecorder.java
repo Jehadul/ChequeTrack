@@ -29,15 +29,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import java.time.Clock;
 import java.util.Optional;
 
-/**
- * Writes audit log and status history rows.
- * <ul>
- *   <li>{@link AuditEvent} and {@link StatusChangedEvent} are written just before the publishing
- *       transaction commits, so they are saved together with the change or not at all. Events
- *       published outside a transaction are written immediately.</li>
- *   <li>Logins, failed logins and logouts come from Spring Security's own events.</li>
- * </ul>
- */
 @Component
 public class AuditRecorder {
 
@@ -52,16 +43,17 @@ public class AuditRecorder {
     private final Clock clock;
 
     public AuditRecorder(AuditLogRepository auditLogRepository,
-                         StatusHistoryRepository statusHistoryRepository,
-                         AppUserRepository userRepository,
-                         Clock clock) {
+            StatusHistoryRepository statusHistoryRepository,
+            AppUserRepository userRepository,
+            Clock clock) {
         this.auditLogRepository = auditLogRepository;
         this.statusHistoryRepository = statusHistoryRepository;
         this.userRepository = userRepository;
         this.clock = clock;
     }
 
-    // ---- events published by the modules -------------------------------------------------
+    // ---- events published by the modules
+    // -------------------------------------------------
 
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT, fallbackExecution = true)
     public void onAuditEvent(AuditEvent event) {
@@ -97,11 +89,13 @@ public class AuditRecorder {
                 .build());
     }
 
-    // ---- Spring Security events ---------------------------------------------------------------
+    // ---- Spring Security events
+    // ---------------------------------------------------------------
 
     @EventListener
     public void onLoginSuccess(AuthenticationSuccessEvent event) {
-        // Only real logins; per-request API token checks use another authentication type
+        // Only real logins; per-request API token checks use another authentication
+        // type
         if (event.getAuthentication() instanceof UsernamePasswordAuthenticationToken
                 && event.getAuthentication().getPrincipal() instanceof AppUserPrincipal user) {
             saveLoginEntry(LOGIN_SUCCESS, user.getCompanyId(), user.getId(), user.getUsername(),
@@ -134,7 +128,8 @@ public class AuditRecorder {
 
     @EventListener
     public void onLogout(LogoutSuccessEvent event) {
-        if (event.getAuthentication() != null && event.getAuthentication().getPrincipal() instanceof AppUserPrincipal user) {
+        if (event.getAuthentication() != null
+                && event.getAuthentication().getPrincipal() instanceof AppUserPrincipal user) {
             saveLoginEntry(LOGOUT, user.getCompanyId(), user.getId(), user.getUsername(), "Logged out");
         }
     }
@@ -154,11 +149,13 @@ public class AuditRecorder {
                 .build());
     }
 
-    // ---- helpers -------------------------------------------------------------------------------
+    // ---- helpers
+    // -------------------------------------------------------------------------------
 
     private static Optional<HttpServletRequest> currentRequest() {
         return RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attrs
-                ? Optional.of(attrs.getRequest()) : Optional.empty();
+                ? Optional.of(attrs.getRequest())
+                : Optional.empty();
     }
 
     private static String clientIp() {

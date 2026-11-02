@@ -16,10 +16,6 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
-/**
- * A supplier bill an issued cheque pays, with the planned amount and what was actually
- * settled at hand-over (so a void or stop payment reverses exactly that).
- */
 @Getter
 @Entity
 @Table(name = "issued_cheque_bill")

@@ -8,10 +8,6 @@ import com.chequetrack.setup.domain.OpenItemType;
 import com.chequetrack.setup.service.OpenItemService;
 import org.springframework.stereotype.Component;
 
-/**
- * Attachments of customer invoices and supplier bills (M4). Lives here because M4
- * may not depend on this module; later modules implement their own resolvers.
- */
 @Component
 public class OpenItemAttachmentOwner implements AttachmentOwnerResolver {
 
@@ -28,7 +24,7 @@ public class OpenItemAttachmentOwner implements AttachmentOwnerResolver {
 
     @Override
     public AttachmentOwner resolve(Long ownerId) {
-        OpenItem item = openItemService.get(ownerId);  // checks INVOICE_VIEW and branch access
+        OpenItem item = openItemService.get(ownerId); // checks INVOICE_VIEW and branch access
         boolean canModify = CurrentUser.get().hasPermission(SetupPermissions.INVOICE_MANAGE)
                 && item.getStatus() != OpenItemStatus.CANCELLED;
         String kind = item.getItemType() == OpenItemType.INVOICE ? "invoices" : "bills";

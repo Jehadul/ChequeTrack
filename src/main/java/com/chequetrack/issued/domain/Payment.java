@@ -17,10 +17,6 @@ import org.hibernate.annotations.SQLRestriction;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-/**
- * Supplier payment created when an issued cheque is handed over, dated on the cheque's
- * due date. Cancelled (never deleted) if the cheque is voided or stopped.
- */
 @Getter
 @Entity
 @Table(name = "payment")

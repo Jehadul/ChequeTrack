@@ -19,11 +19,6 @@ import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDate;
 
-/**
- * A cheque book of a company bank account: a continuous range of leaf numbers.
- * Its leaves are created together with it ({@link ChequeLeaf}). Branch-scoped,
- * with the branch of the account.
- */
 @Getter
 @Entity
 @Table(name = "cheque_book")
@@ -31,7 +26,6 @@ import java.time.LocalDate;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChequeBook extends BranchScopedEntity {
 
-    /** Largest book accepted (the database allows up to 1000 leaves). */
     public static final int MAX_LEAVES = 500;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -61,7 +55,7 @@ public class ChequeBook extends BranchScopedEntity {
     private String notes;
 
     public static ChequeBook create(CompanyBankAccount account, String prefix, long firstNumber, int leafCount,
-                                    int numberWidth, LocalDate receivedDate, String notes) {
+            int numberWidth, LocalDate receivedDate, String notes) {
         ChequeBook book = new ChequeBook();
         book.assignScope(account.getCompanyId(), account.getBranchId());
         book.account = account;
@@ -109,7 +103,9 @@ public class ChequeBook extends BranchScopedEntity {
         this.status = newStatus;
     }
 
-    /** Called after leaf changes: no unused leaf left means the book is finished. */
+    /**
+     * Called after leaf changes: no unused leaf left means the book is finished.
+     */
     public void markFinished() {
         if (status == BookStatus.ACTIVE) {
             this.status = BookStatus.FINISHED;

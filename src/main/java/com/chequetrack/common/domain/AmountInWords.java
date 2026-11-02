@@ -3,16 +3,13 @@ package com.chequetrack.common.domain;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-/**
- * Amount in English words with the Bangladeshi number system (crore, lakh, thousand),
- * as written on cheques: 125000.50 → "Taka One Lakh Twenty Five Thousand and Paisa Fifty Only".
- * The Bangla version is added with printing (M10).
- */
 public final class AmountInWords {
 
-    private static final String[] ONES = {"", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
-            "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"};
-    private static final String[] TENS = {"", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"};
+    private static final String[] ONES = { "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+            "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen",
+            "Nineteen" };
+    private static final String[] TENS = { "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty",
+            "Ninety" };
 
     private AmountInWords() {
     }
@@ -32,7 +29,10 @@ public final class AmountInWords {
         return sb.append(" Only").toString();
     }
 
-    /** Words for a whole number: crore groups can themselves be large ("One Hundred Crore"). */
+    /**
+     * Words for a whole number: crore groups can themselves be large ("One Hundred
+     * Crore").
+     */
     static String words(long n) {
         StringBuilder sb = new StringBuilder();
         long crore = n / 10_000_000;

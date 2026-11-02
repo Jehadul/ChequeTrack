@@ -14,7 +14,6 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
 
-/** HS256 signing and verification with one shared secret (single application, no external issuer). */
 @Configuration
 public class JwtConfig {
 

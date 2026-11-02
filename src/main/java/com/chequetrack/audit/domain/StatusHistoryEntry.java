@@ -14,7 +14,6 @@ import org.hibernate.annotations.Immutable;
 
 import java.time.Instant;
 
-/** One status change of any record. Append-only: the database refuses updates and deletes. */
 @Getter
 @Entity
 @Immutable
@@ -58,7 +57,7 @@ public class StatusHistoryEntry {
 
     @Builder
     private StatusHistoryEntry(Long companyId, Long branchId, String entityType, Long entityId, String fromStatus,
-                               String toStatus, String reason, Instant changedAt, Long userId, String username) {
+            String toStatus, String reason, Instant changedAt, Long userId, String username) {
         this.companyId = companyId;
         this.branchId = branchId;
         this.entityType = entityType;
