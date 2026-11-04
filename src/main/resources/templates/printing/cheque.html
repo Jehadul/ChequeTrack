@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="|Print cheque ${c.chequeNumber}|">Print cheque</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-printer"></i> Print cheque <span class="font-monospace" th:text="${c.chequeNumber}">0001</span></h1>
+        <span th:replace="~{fragments/forms :: chequeStatus(${c.status})}"></span>
+        <a th:href="@{/issued/{id}(id=${c.id})}" class="btn btn-link btn-sm ms-auto"><i class="bi bi-arrow-left"></i> Back to the cheque</a>
+    </div>
+
+    <div th:if="${layout == null}" class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle"></i> Account <span th:text="${c.account.label}"></span> has no active print layout.
+        An administrator sets one up under Printing → Cheque layouts.
+    </div>
+
+    <!-- Waiting for the user to say how the leaf came out -->
+    <div th:if="${pending}" class="card border-warning mb-3">
+        <div class="card-body">
+            <h2 class="h6"><i class="bi bi-question-circle text-warning"></i> Did leaf <span class="font-monospace" th:text="${pending.chequeNumber}"></span>
+                print correctly?</h2>
+            <p class="small text-secondary">Check that every field sits inside its box and nothing is cut off.</p>
+            <div class="d-flex flex-wrap gap-2 align-items-start">
+                <form th:action="@{/printing/logs/{l}/ok(l=${pending.id})}" method="post">
+                    <input type="hidden" name="back" th:value="|/issued/${c.id}|">
+                    <button class="btn btn-success" type="submit"><i class="bi bi-check-lg"></i> Yes, printed correctly</button>
+                </form>
+                <form th:action="@{/printing/logs/{l}/spoiled(l=${pending.id})}" method="post" class="d-flex gap-2 flex-grow-1" style="max-width: 560px">
+                    <input type="hidden" name="back" th:value="|/printing/cheques/${c.id}|">
+                    <input type="text" name="reason" class="form-control" maxlength="300" required
+                           placeholder="What went wrong? e.g. paper jam, printed off the boxes">
+                    <button class="btn btn-outline-danger text-nowrap" type="submit"><i class="bi bi-x-octagon"></i> Spoiled: void the leaf</button>
+                </form>
+            </div>
+            <p class="small text-secondary mt-2 mb-0">Spoiled: leaf <span class="font-monospace" th:text="${pending.chequeNumber}"></span> becomes void
+                and the cheque moves to the next leaf, to print again. Not printed at all? Just print again.</p>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl-8">
+            <div class="card mb-3" th:if="${layout}">
+                <div class="card-header bg-white d-flex align-items-center">
+                    <span class="fw-semibold">How it will print</span>
+                    <span class="small text-secondary ms-2" th:text="|layout '${layout.name}', ${layout.widthMm} × ${layout.heightMm} mm|"></span>
+                </div>
+                <div class="card-body designer-wrap">
+                    <div id="sheet" class="designer-sheet print-preview"
+                         th:style="|width: ${layout.widthMm * scale}px; height: ${layout.heightMm * scale}px|" th:attr="data-scale=${scale}">
+                        <div th:each="f : ${layout.fields}" th:if="${f.printed}" class="designer-field"
+                             th:style="|left: ${f.xMm * scale}px; top: ${f.yMm * scale}px; width: ${f.widthMm * scale}px; font-family: ${f.fontFamily.css}; font-weight: ${f.bold ? 700 : 400}; text-align: ${#strings.toLowerCase(f.align)}|"
+                             th:attr="data-code=${f.fieldCode}, data-text=${texts[f.fieldCode]}, data-size=${f.fontSizePt},
+                                      data-pitch=${f.charSpacingMm}, data-angle=${f.angleDeg}, data-gap=${f.lineGapMm}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-white fw-semibold">Print history</div>
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="table-light"><tr><th>When</th><th>What</th><th>Leaf</th><th>Printer</th><th>Result</th><th>By</th></tr></thead>
+                    <tbody>
+                    <tr th:each="p : ${history}">
+                        <td class="small text-nowrap" th:text="${@displayFormat.ts(p.createdAt)}"></td>
+                        <td th:text="${#strings.capitalize(#strings.toLowerCase(p.kind))}">Print</td>
+                        <td class="font-monospace" th:text="${p.chequeNumber}"></td>
+                        <td class="small" th:text="${p.printerName} ?: '-'"></td>
+                        <td><span th:replace="~{printing/fragments :: outcome(${p.outcome})}"></span>
+                            <div class="small text-secondary" th:if="${p.note}" th:text="${p.note}"></div></td>
+                        <td class="small" th:text="${p.createdBy}"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(history)}"><td colspan="6" class="text-center text-secondary py-3">Not printed yet.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card" th:if="${layout != null and c.status.name() == 'APPROVED'}">
+                <div class="card-header bg-white fw-semibold">Print</div>
+                <form th:action="@{/printing/cheques/{id}/pdf(id=${c.id})}" method="post" target="_blank" class="card-body" id="print-form">
+                    <ol class="small ps-3">
+                        <li>Put leaf <strong class="font-monospace" th:text="${c.chequeNumber}"></strong> in the printer.</li>
+                        <li>Open the PDF and print it at <strong>Actual size / 100%</strong> (no "fit to page").</li>
+                        <li>Come back here and say how it came out.</li>
+                    </ol>
+                    <label class="form-label small mb-1">Printer</label>
+                    <select name="printerId" class="form-select form-select-sm mb-3">
+                        <option value="">No printer offset</option>
+                        <option th:each="p : ${printers}" th:value="${p.id}" th:text="${p.label}" th:selected="${p.id == printerId}">Printer</option>
+                    </select>
+                    <button class="btn btn-primary w-100" type="submit"><i class="bi bi-file-earmark-pdf"></i>
+                        <span th:text="|Open PDF for leaf ${c.chequeNumber}|">Open PDF</span></button>
+                </form>
+            </div>
+            <div class="alert alert-info small" th:if="${c.status.name() != 'APPROVED'}">
+                <span th:if="${c.status.name() == 'PRINTED'}">This cheque is printed. To print it again (damaged or lost before hand-over),
+                    ask for a <strong>Reprint</strong> on the cheque page; after approval it comes back here on a new leaf.</span>
+                <span th:unless="${c.status.name() == 'PRINTED'}" th:text="|This cheque is ${#strings.toLowerCase(c.status.label)}. Only approved cheques are printed.|"></span>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block layout:fragment="scripts">
+    <script th:src="@{/js/designer.js}"></script>
+    <script>
+        // The PDF opens in a new tab; reload this page so the "printed correctly?" question appears
+        $('#print-form').on('submit', () => setTimeout(() => window.location.reload(), 1500));
+    </script>
+</th:block>
+</body>
+</html>

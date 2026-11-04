@@ -235,6 +235,21 @@ public class ChequeBookService {
         return leaf;
     }
 
+    /**
+     * A leaf that carried a cheque is void: a spoiled print, or a reprint (M10). Recorded in the
+     * leaf's status history; the cheque itself moves on to a new leaf.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void voidLeafOfCheque(ChequeLeaf leaf, String reason) {
+        LeafStatus from = leaf.getStatus();
+        leaf.voidWithCheque();
+        events.publishEvent(new StatusChangedEvent(LEAF, leaf.getId(), leaf.getCompanyId(), leaf.getBranchId(),
+                from.name(), LeafStatus.VOID.name(), reason));
+        events.publishEvent(AuditEvent.of("LEAF_VOIDED", BOOK, leaf.getBook().getId(),
+                "Voided leaf " + leaf.getDisplayNumber() + ": " + reason));
+        finishIfEmpty(leaf.getBook());
+    }
+
     /** The leaf a new cheque on this account would get now, or null (for the form; not reserved). */
     @Transactional(readOnly = true)
     public ChequeLeaf peekNextLeaf(Long accountId) {

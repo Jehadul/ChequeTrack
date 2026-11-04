@@ -47,6 +47,14 @@ public interface IssuedChequeRepository extends JpaRepository<IssuedCheque, Long
             """)
     List<IssuedCheque> findOutstanding(@Param("partyId") Long partyId);
 
+    /** Approved cheques of an account waiting to be printed, in leaf order. */
+    @Query("""
+            select c from IssuedCheque c join fetch c.party join fetch c.leaf l
+             where c.account.id = :accountId and c.status = com.chequetrack.lifecycle.domain.IssuedStatus.APPROVED
+             order by l.prefix, l.leafNumber
+            """)
+    List<IssuedCheque> findApprovedForAccount(@Param("accountId") Long accountId);
+
     /** Has this void or stopped cheque already been written again (cancelled reissues do not count)? */
     @Query(value = "select exists(select 1 from issued_cheque where reissue_of_id = :id and deleted = false and status <> 'CANCELLED')",
             nativeQuery = true)

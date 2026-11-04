@@ -75,8 +75,8 @@ public class IssuedChequeController {
         TABS.put("all", EnumSet.allOf(IssuedStatus.class));
     }
 
-    /** Printing on the bank layout, including reprints, comes in M10. */
-    private static final Set<String> HIDDEN_ACTIONS = Set.of("REPRINT");
+    /** Print is confirmed on the print page (M10), after the PDF was produced, never as a plain button. */
+    private static final Set<String> HIDDEN_ACTIONS = Set.of("PRINT");
 
     private final IssuedChequeService chequeService;
     private final TransitionService transitionService;

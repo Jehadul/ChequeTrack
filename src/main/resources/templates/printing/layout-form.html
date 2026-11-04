@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="${form.id == null} ? 'New layout' : 'Layout settings'">Layout</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <h1 class="h4 mb-3"><i class="bi bi-layout-text-window"></i>
+        <span th:text="${form.id == null} ? 'New cheque layout' : 'Layout settings'">New cheque layout</span></h1>
+
+    <form th:action="${form.id == null} ? @{/printing/layouts} : @{/printing/layouts/{id}(id=${form.id})}" th:object="${form}"
+          method="post" novalidate style="max-width: 820px">
+        <input type="hidden" th:field="*{version}">
+        <div th:replace="~{fragments/forms :: globalErrors}"></div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-white fw-semibold">Leaf</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="accountId" class="form-label">Bank account <span class="text-danger">*</span></label>
+                        <select th:if="${form.id == null}" th:field="*{accountId}" class="form-select"
+                                th:classappend="${#fields.hasErrors('accountId')} ? 'is-invalid'">
+                            <option value="">Choose…</option>
+                            <option th:each="a : ${accounts}" th:value="${a.id}" th:text="${a.label}">Account</option>
+                        </select>
+                        <th:block th:if="${form.id != null}">
+                            <input type="hidden" th:field="*{accountId}">
+                            <div class="form-control-plaintext">Fixed once created; copy the layout for another account.</div>
+                        </th:block>
+                        <div class="invalid-feedback" th:errors="*{accountId}"></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{name}" class="form-control" maxlength="100" placeholder="e.g. DBBL standard leaf 2026"
+                               th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{name}"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label for="widthMm" class="form-label">Width (mm) <span class="text-danger">*</span></label>
+                        <input type="number" th:field="*{widthMm}" class="form-control" min="50" max="300" step="0.1"
+                               th:classappend="${#fields.hasErrors('widthMm')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{widthMm}"></div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="heightMm" class="form-label">Height (mm) <span class="text-danger">*</span></label>
+                        <input type="number" th:field="*{heightMm}" class="form-control" min="30" max="150" step="0.1"
+                               th:classappend="${#fields.hasErrors('heightMm')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{heightMm}"></div>
+                    </div>
+                    <div class="col-md-6 mb-3 d-flex align-items-end">
+                        <div class="form-text">Measure a real leaf with a ruler, edge to edge.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-white fw-semibold">What is printed</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="wordsLanguage" class="form-label">Amount in words</label>
+                        <select th:field="*{wordsLanguage}" class="form-select">
+                            <option th:each="l : ${languages}" th:value="${l}"
+                                    th:text="${l.name() == 'BANGLA'} ? 'Bangla (টাকা … মাত্র)' : 'English (Taka … Only)'">English</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="dateFormat" class="form-label">Date</label>
+                        <select th:field="*{dateFormat}" class="form-select">
+                            <option th:each="d : ${dateStyles}" th:value="${d}" th:text="${d.label}">DD/MM/YYYY</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3 d-flex align-items-end">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" th:field="*{protectionStars}">
+                            <label class="form-check-label" for="protectionStars1">Stars around the amount (**1,25,000.00**)</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="signatoryCompany" class="form-label">Above the signature</label>
+                        <input type="text" th:field="*{signatoryCompany}" class="form-control" maxlength="150" placeholder="e.g. For ABC Trading Ltd.">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="signatoryNames" class="form-label">Signatory names</label>
+                        <input type="text" th:field="*{signatoryNames}" class="form-control" maxlength="200" placeholder="e.g. Managing Director">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i>
+            <span th:text="${form.id == null} ? 'Create and open the designer' : 'Save'">Save</span></button>
+        <a th:href="${form.id == null} ? @{/printing/layouts} : @{/printing/layouts/{id}(id=${form.id})}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+</th:block>
+</body>
+</html>

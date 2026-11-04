@@ -113,8 +113,10 @@
         </div>
 
         <div class="col-lg-5">
-            <div class="card mb-3" th:if="${canManage and (c.status.name() == 'DRAFT' or (c.reissuable and reissue == null))}">
+            <div class="card mb-3" th:if="${canManage and (c.status.name() == 'DRAFT' or c.status.name() == 'APPROVED' or (c.reissuable and reissue == null))}">
                 <div class="card-body d-flex flex-wrap gap-2">
+                    <a th:if="${c.status.name() == 'APPROVED'}" th:href="@{/printing/cheques/{id}(id=${c.id})}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-printer"></i> Print cheque</a>
                     <a th:if="${c.status.name() == 'DRAFT'}" th:href="@{/issued/{id}/edit(id=${c.id})}" class="btn btn-outline-primary btn-sm">
                         <i class="bi bi-pencil"></i> Edit draft</a>
                     <a th:if="${c.reissuable and reissue == null}" th:href="@{/issued/new(reissueOf=${c.id})}" class="btn btn-primary btn-sm">
@@ -164,8 +166,9 @@
                                        th:max="${expiry.date}" required>
                             </div>
                             <p th:if="${t.action == 'SUBMIT'}" class="small text-secondary mb-2">Goes to the approvers its amount needs; with no rule it is approved at once.</p>
-                            <p th:if="${t.action == 'PRINT'}" class="small text-secondary mb-2">Records the cheque as written on leaf
-                                <span class="font-monospace" th:text="${c.chequeNumber}"></span>. Printing on the bank's layout comes with cheque printing.</p>
+                            <p th:if="${t.action == 'REPRINT'}" class="small text-secondary mb-2">For a printed cheque that was damaged or lost
+                                before hand-over. After approval leaf <span class="font-monospace" th:text="${c.chequeNumber}"></span> becomes void
+                                and the cheque goes back to "Approved" on the next leaf, to be printed again.</p>
                             <p th:if="${t.action == 'CANCEL'}" class="small text-secondary mb-2">The blank leaf goes back to stock.</p>
                             <p th:if="${t.action == 'VOID'}" class="small text-danger mb-2">The leaf becomes void<span th:if="${c.payment}">, the payment is cancelled and the bills re-opened</span>.</p>
                             <p th:if="${t.action == 'STOP_PAYMENT'}" class="small text-danger mb-2">Tell the bank to stop payment. The payment is cancelled and the bills re-opened.</p>

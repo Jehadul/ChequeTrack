@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Waiting for confirmation</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-hourglass-split"></i> Prints waiting for confirmation</h1>
+        <a th:href="@{/printing/batch}" class="btn btn-outline-primary btn-sm ms-auto"><i class="bi bi-printer"></i> Print cheques</a>
+    </div>
+    <p class="text-secondary small">Look at each printed leaf. <strong>Printed</strong> marks the cheque printed; <strong>Spoiled</strong>
+        voids that leaf and moves the cheque to the next leaf, to print again.</p>
+
+    <div th:if="${#maps.isEmpty(batches)}" class="alert alert-light border">Nothing is waiting for confirmation.</div>
+
+    <div class="card mb-3" th:each="b : ${batches}">
+        <div class="card-header bg-white d-flex align-items-center gap-2">
+            <span class="fw-semibold" th:text="|${#lists.size(b.value)} leaf(s)|">2 leaves</span>
+            <span class="small text-secondary" th:text="|printed by ${b.value[0].createdBy}, ${@displayFormat.ts(b.value[0].createdAt)}${b.value[0].printerName != null ? ' on ' + b.value[0].printerName : ''}|"></span>
+            <form th:if="${#lists.size(b.value) > 1}" th:action="@{/printing/batches/{r}/ok(r=${b.key})}" method="post" class="ms-auto">
+                <button class="btn btn-success btn-sm" type="submit"><i class="bi bi-check-all"></i> All printed correctly</button>
+            </form>
+        </div>
+        <table class="table align-middle mb-0">
+            <tbody>
+            <tr th:each="p : ${b.value}">
+                <td class="text-nowrap"><a class="font-monospace fw-semibold" th:href="@{/printing/cheques/{id}(id=${p.chequeId})}" th:text="${p.chequeNumber}">0001</a>
+                    <span th:if="${p.kind.name() == 'REPRINT'}" class="badge text-bg-light border">Reprint</span></td>
+                <td class="text-end">
+                    <form th:action="@{/printing/logs/{l}/ok(l=${p.id})}" method="post" class="d-inline">
+                        <input type="hidden" name="back" value="/printing/pending">
+                        <button class="btn btn-outline-success btn-sm" type="submit"><i class="bi bi-check-lg"></i> Printed</button>
+                    </form>
+                </td>
+                <td style="width: 50%">
+                    <form th:action="@{/printing/logs/{l}/spoiled(l=${p.id})}" method="post" class="d-flex gap-1">
+                        <input type="hidden" name="back" value="/printing/pending">
+                        <input type="text" name="reason" class="form-control form-control-sm" maxlength="300" required placeholder="What went wrong?">
+                        <button class="btn btn-outline-danger btn-sm text-nowrap" type="submit">Spoiled</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</th:block>
+</body>
+</html>

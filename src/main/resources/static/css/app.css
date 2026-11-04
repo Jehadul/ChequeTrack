@@ -184,3 +184,72 @@ body {
     background: #fbfcf4;
     border-left: 4px solid var(--app-brand);
 }
+
+/* Cheque layout designer: the leaf drawn to scale, fields dragged onto it */
+.designer-wrap {
+    overflow-x: auto;
+    background: #e9ecef;
+}
+
+.designer-sheet {
+    position: relative;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #adb5bd;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .15);
+}
+
+.designer-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: .9;
+    pointer-events: none;
+}
+
+.designer-field {
+    position: absolute;
+    color: #111;
+    white-space: nowrap;
+    outline: 1px dashed rgba(31, 78, 121, .7);
+    background: rgba(255, 255, 255, .35);
+    cursor: move;
+}
+
+.designer-field:hover,
+.designer-field.ui-draggable-dragging {
+    outline: 2px solid var(--app-brand);
+    z-index: 2;
+}
+
+.designer-field.off {
+    opacity: .35;
+}
+
+.designer-digit {
+    display: inline-block;
+    text-align: center;
+}
+
+.designer-crossing {
+    border-top: 1px solid #111;
+    border-bottom: 1px solid #111;
+    text-align: center;
+}
+
+.designer-table input.form-control,
+.designer-table select {
+    min-width: 4.5rem;
+}
+
+/* Print page: the cheque as it will come out */
+.print-preview {
+    pointer-events: none;
+}
+
+.print-preview .designer-field {
+    outline: none;
+    background: none;
+    cursor: default;
+}

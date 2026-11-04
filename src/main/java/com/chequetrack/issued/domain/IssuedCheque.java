@@ -45,10 +45,11 @@ public class IssuedCheque extends BranchScopedEntity implements LifecycleRecord 
     private CompanyBankAccount account;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "leaf_id", nullable = false, updatable = false)
+    @JoinColumn(name = "leaf_id", nullable = false)
     private ChequeLeaf leaf;
 
-    @Column(name = "cheque_number", nullable = false, length = 30, updatable = false)
+    /** Number of the current leaf; changes only when a spoiled leaf is replaced (M10). */
+    @Column(name = "cheque_number", nullable = false, length = 30)
     private String chequeNumber;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -182,6 +183,12 @@ public class IssuedCheque extends BranchScopedEntity implements LifecycleRecord 
         this.printCount++;
         this.printedAt = at;
         leaf.markUsed();
+    }
+
+    /** The current leaf was spoiled (or a reprint was approved): the cheque continues on a new leaf. */
+    public void moveToLeaf(ChequeLeaf newLeaf) {
+        this.leaf = newLeaf;
+        this.chequeNumber = newLeaf.getDisplayNumber();
     }
 
     public void handedOver(String collectedBy, LocalDate on, String note, Payment payment) {

@@ -122,6 +122,14 @@ public class IssuedChequeService {
         return c;
     }
 
+    /** Approved cheques of one account, waiting to be printed, in leaf number order (batch printing). */
+    @Transactional(readOnly = true)
+    @PreAuthorize(MANAGE)
+    public List<IssuedCheque> approvedForPrinting(Long accountId) {
+        accountService.get(accountId);  // branch check
+        return chequeRepository.findApprovedForAccount(accountId);
+    }
+
     /** Live reissue of a void or stopped cheque, or null. */
     @Transactional(readOnly = true)
     @PreAuthorize(VIEW)
@@ -285,6 +293,41 @@ public class IssuedChequeService {
             events.publishEvent(AuditEvent.of("ISSUED_CHEQUE_UPDATED", IssuedCheque.RECORD_TYPE, cheque.getId(),
                     "Updated draft cheque " + cheque.getChequeNumber(), changes));
         }
+    }
+
+    /**
+     * The print of an approved cheque came out wrong (paper jam, misaligned): the leaf is void and
+     * the cheque, still approved, moves to the next unused leaf to be printed again. No approval is
+     * needed because nothing was handed out; the void leaf and the reason stay in the history.
+     */
+    @Transactional
+    @PreAuthorize(MANAGE)
+    public IssuedCheque spoiledPrint(Long id, String reason) {
+        if (reason == null || reason.isBlank()) {
+            throw new BusinessException("Say what went wrong with the print.");
+        }
+        IssuedCheque cheque = get(id);
+        if (cheque.getStatus() != IssuedStatus.APPROVED) {
+            throw new BusinessException("Only an approved cheque that is being printed can have a spoiled print. "
+                    + "A printed cheque needs an approved reprint.");
+        }
+        moveToNextLeaf(cheque, "Spoiled print: " + reason.trim());
+        return cheque;
+    }
+
+    /**
+     * Voids the cheque's current leaf and moves the cheque to the next unused leaf of its account.
+     * Runs inside the caller's transaction (spoiled print, or an approved REPRINT).
+     */
+    public void moveToNextLeaf(IssuedCheque cheque, String reason) {
+        String oldNumber = cheque.getChequeNumber();
+        ChequeLeaf next = chequeBookService.allocateNextLeaf(cheque.getAccount());
+        chequeBookService.voidLeafOfCheque(cheque.getLeaf(), reason + " (cheque moved to leaf " + next.getDisplayNumber() + ")");
+        cheque.moveToLeaf(next);
+        String text = reason + ". Leaf " + oldNumber + " void; the cheque is now on leaf " + next.getDisplayNumber();
+        events.publishEvent(new StatusChangedEvent(IssuedCheque.RECORD_TYPE, cheque.getId(), cheque.getCompanyId(),
+                cheque.getBranchId(), cheque.getStatus().name(), cheque.getStatus().name(), text));
+        events.publishEvent(AuditEvent.of("ISSUED_CHEQUE_LEAF_REPLACED", IssuedCheque.RECORD_TYPE, cheque.getId(), text));
     }
 
     // ---- helpers -------------------------------------------------------------------------------

@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Print log outcome badge (PrintLog.Outcome) -->
+<span th:fragment="outcome(outcome)" class="badge" th:with="s=${outcome.name()}"
+      th:classappend="${s == 'OK'} ? 'text-bg-success' : (${s == 'PENDING'} ? 'text-bg-warning' : (${s == 'SPOILED'} ? 'text-bg-danger' : (${s == 'TEST'} ? 'text-bg-info' : 'text-bg-secondary')))"
+      th:text="${s == 'OK'} ? 'Printed' : (${s == 'PENDING'} ? 'Waiting for confirmation' : (${s == 'SPOILED'} ? 'Spoiled, leaf void' : (${s == 'TEST'} ? 'Test print' : 'Printed again')))">Printed</span>
+
+</body>
+</html>

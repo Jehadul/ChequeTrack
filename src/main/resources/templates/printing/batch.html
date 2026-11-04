@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Print cheques</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-printer"></i> Print cheques</h1>
+        <a th:href="@{/printing/pending}" class="btn btn-outline-primary btn-sm ms-auto"><i class="bi bi-hourglass-split"></i> Waiting for confirmation</a>
+    </div>
+    <p class="text-secondary small">Approved cheques of one bank account, printed in leaf-number order in one PDF. Load the leaves in the
+        same order, print at <strong>Actual size / 100%</strong>, then confirm each leaf under <em>Waiting for confirmation</em>.</p>
+
+    <form th:action="@{/printing/batch}" method="get" class="row g-2 mb-3">
+        <div class="col-md-5">
+            <select name="accountId" class="form-select" onchange="this.form.submit()">
+                <option value="">Choose the bank account…</option>
+                <option th:each="a : ${accounts}" th:value="${a.id}" th:text="${a.label}" th:selected="${a.id == accountId}">Account</option>
+            </select>
+        </div>
+    </form>
+
+    <th:block th:if="${accountId != null}">
+        <div th:if="${layoutName == null}" class="alert alert-warning">This account has no active print layout yet.</div>
+        <form th:action="@{/printing/batch/pdf}" method="post" target="_blank" class="card" id="batch-form">
+            <input type="hidden" name="accountId" th:value="${accountId}">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                    <tr><th style="width: 2rem"><input type="checkbox" class="form-check-input" id="all" checked title="All"></th>
+                        <th>Leaf</th><th>Cheque date</th><th>Payee</th><th class="text-end">Amount</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="c : ${cheques}">
+                        <td><input type="checkbox" class="form-check-input pick" name="chequeIds" th:value="${c.id}" checked></td>
+                        <td><a class="font-monospace fw-semibold" th:href="@{/printing/cheques/{id}(id=${c.id})}" th:text="${c.chequeNumber}">0001</a></td>
+                        <td th:text="${@displayFormat.date(c.chequeDate)}"></td>
+                        <td th:text="${c.payeeName}"></td>
+                        <td class="amount" th:text="${@displayFormat.amount(c.amount)}"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(cheques)}"><td colspan="5" class="text-center text-secondary py-4">No approved cheques waiting to be printed on this account.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white d-flex flex-wrap gap-2 align-items-center" th:unless="${#lists.isEmpty(cheques)}">
+                <span class="small text-secondary" th:text="|Layout: ${layoutName ?: 'none'} · at most ${max} at a time|"></span>
+                <select name="printerId" class="form-select form-select-sm ms-md-auto" style="max-width: 300px">
+                    <option value="">No printer offset</option>
+                    <option th:each="p : ${printers}" th:value="${p.id}" th:text="${p.label}" th:selected="${p.id == printerId}">Printer</option>
+                </select>
+                <button class="btn btn-primary btn-sm" type="submit" th:disabled="${layoutName == null}">
+                    <i class="bi bi-file-earmark-pdf"></i> Open PDF of the ticked cheques</button>
+            </div>
+        </form>
+    </th:block>
+</th:block>
+
+<th:block layout:fragment="scripts">
+    <script th:inline="javascript">
+        $('#all').on('change', function () { $('.pick').prop('checked', this.checked); });
+        // After the PDF opens in a new tab, go to the confirmation list
+        $('#batch-form').on('submit', () => setTimeout(() => { window.location = /*[[@{/printing/pending}]]*/ '/printing/pending'; }, 1500));
+    </script>
+</th:block>
+</body>
+</html>

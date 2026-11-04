@@ -23,6 +23,8 @@
         <bootstrap.version>5.3.3</bootstrap.version>
         <bootstrap-icons.version>1.11.3</bootstrap-icons.version>
         <jquery.version>3.7.1</jquery.version>
+        <jquery-ui.version>1.13.2</jquery-ui.version>
+        <pdfbox.version>3.0.3</pdfbox.version>
     </properties>
 
     <dependencies>
@@ -102,6 +104,18 @@
             <groupId>org.webjars</groupId>
             <artifactId>jquery</artifactId>
             <version>${jquery.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>jquery-ui</artifactId>
+            <version>${jquery-ui.version}</version>
+        </dependency>
+
+        <!-- Cheque printing: PDF drawn field by field at exact mm positions (Bangla shaping via GSUB) -->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>${pdfbox.version}</version>
         </dependency>
 
         <!-- Developer tools -->

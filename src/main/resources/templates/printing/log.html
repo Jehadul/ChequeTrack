@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Print log</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <h1 class="h4 mb-3"><i class="bi bi-journal-text"></i> Print log</h1>
+
+    <form th:action="@{/printing/log}" method="get" class="row g-2 mb-3">
+        <div class="col-6 col-md-2">
+            <select name="kind" class="form-select form-select-sm">
+                <option value="">All kinds</option>
+                <option th:each="k : ${kinds}" th:value="${k}" th:text="${#strings.capitalize(#strings.toLowerCase(k))}" th:selected="${k == kind}">Print</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-2">
+            <select name="outcome" class="form-select form-select-sm">
+                <option value="">All results</option>
+                <option th:each="o : ${outcomes}" th:value="${o}" th:text="${#strings.capitalize(#strings.toLowerCase(o))}" th:selected="${o == outcome}">Ok</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-2"><input type="date" name="from" class="form-control form-control-sm" th:value="${from}" title="From"></div>
+        <div class="col-6 col-md-2"><input type="date" name="to" class="form-control form-control-sm" th:value="${to}" title="To"></div>
+        <div class="col-md-2"><input type="search" name="q" class="form-control form-control-sm" th:value="${q}" placeholder="Leaf or user"></div>
+        <div class="col-md-2 d-flex gap-1">
+            <button class="btn btn-outline-secondary btn-sm flex-fill" type="submit"><i class="bi bi-funnel"></i> Filter</button>
+            <a th:href="@{/printing/log}" class="btn btn-outline-secondary btn-sm" title="Clear"><i class="bi bi-x-lg"></i></a>
+        </div>
+    </form>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light"><tr><th>When</th><th>Kind</th><th>Leaf</th><th>Printer</th><th>Result</th><th>By</th><th>Confirmed</th></tr></thead>
+                <tbody>
+                <tr th:each="p : ${logs.content}">
+                    <td class="small text-nowrap" th:text="${@displayFormat.ts(p.createdAt)}"></td>
+                    <td th:text="${#strings.capitalize(#strings.toLowerCase(p.kind))}">Print</td>
+                    <td>
+                        <a th:if="${p.chequeId}" class="font-monospace" th:href="@{/issued/{id}(id=${p.chequeId})}" th:text="${p.chequeNumber}">0001</a>
+                        <span th:unless="${p.chequeId}" class="text-secondary small">sample cheque</span>
+                    </td>
+                    <td class="small" th:text="${p.printerName} ?: '-'"></td>
+                    <td><span th:replace="~{printing/fragments :: outcome(${p.outcome})}"></span>
+                        <div class="small text-secondary" th:if="${p.note}" th:text="${p.note}"></div></td>
+                    <td class="small" th:text="${p.createdBy}"></td>
+                    <td class="small text-nowrap" th:text="${p.decidedBy != null} ? |${p.decidedBy}, ${@displayFormat.ts(p.decidedAt)}| : ''"></td>
+                </tr>
+                <tr th:if="${logs.empty}"><td colspan="7" class="text-center text-secondary py-4">Nothing printed.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex align-items-center small" th:if="${logs.totalPages > 1}">
+            <span class="text-secondary" th:text="|${logs.totalElements} entries|"></span>
+            <nav class="ms-auto">
+                <a th:if="${logs.hasPrevious()}" class="btn btn-outline-secondary btn-sm"
+                   th:href="@{/printing/log(kind=${kind}, outcome=${outcome}, from=${from}, to=${to}, q=${q}, page=${logs.number - 1})}"><i class="bi bi-chevron-left"></i></a>
+                <span class="mx-2" th:text="|Page ${logs.number + 1} of ${logs.totalPages}|"></span>
+                <a th:if="${logs.hasNext()}" class="btn btn-outline-secondary btn-sm"
+                   th:href="@{/printing/log(kind=${kind}, outcome=${outcome}, from=${from}, to=${to}, q=${q}, page=${logs.number + 1})}"><i class="bi bi-chevron-right"></i></a>
+            </nav>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

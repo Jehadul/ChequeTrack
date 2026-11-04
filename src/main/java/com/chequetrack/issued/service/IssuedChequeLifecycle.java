@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Connects issued cheques to the lifecycle engine: loading with access checks and the
@@ -40,6 +41,8 @@ public class IssuedChequeLifecycle implements LifecycleSupport {
     private final DocumentNumberService numbers;
     private final SettingsService settingsService;
     private final BranchScope branchScope;
+    private final IssuedChequeService chequeService;
+    private final List<IssuedChequePrintGuard> printGuards;
     private final Clock clock;
 
     public IssuedChequeLifecycle(IssuedChequeRepository chequeRepository,
@@ -48,6 +51,8 @@ public class IssuedChequeLifecycle implements LifecycleSupport {
                                  DocumentNumberService numbers,
                                  SettingsService settingsService,
                                  BranchScope branchScope,
+                                 IssuedChequeService chequeService,
+                                 List<IssuedChequePrintGuard> printGuards,
                                  Clock clock) {
         this.chequeRepository = chequeRepository;
         this.paymentRepository = paymentRepository;
@@ -55,6 +60,8 @@ public class IssuedChequeLifecycle implements LifecycleSupport {
         this.numbers = numbers;
         this.settingsService = settingsService;
         this.branchScope = branchScope;
+        this.chequeService = chequeService;
+        this.printGuards = printGuards;
         this.clock = clock;
     }
 
@@ -102,10 +109,12 @@ public class IssuedChequeLifecycle implements LifecycleSupport {
                 }
             }
             case "PRINT" -> {
+                printGuards.forEach(g -> g.beforePrint(cheque));
                 cheque.printed(clock.instant());
                 chequeBookService.finishIfEmpty(cheque.getLeaf().getBook());
             }
-            case "REPRINT" -> throw new BusinessException("Reprinting arrives with cheque printing (M10).");
+            // Approved reprint: the printed leaf is void and the cheque goes back to Approved on a new leaf
+            case "REPRINT" -> chequeService.moveToNextLeaf(cheque, "Reprint approved: " + input.reason());
             case "HAND_OVER" -> {
                 Object who = input.value(PAYLOAD_COLLECTED_BY);
                 if (who == null || who.toString().isBlank()) {

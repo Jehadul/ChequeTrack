@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Printers</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-printer"></i> Printers</h1>
+        <a th:href="@{/printing/layouts}" class="btn btn-link btn-sm ms-auto"><i class="bi bi-arrow-left"></i> Cheque layouts</a>
+    </div>
+    <p class="text-secondary small">Each printer feeds paper slightly differently. Its offset shifts everything printed on it, so one
+        layout prints exactly on the leaf from any printer. Find the offset with a test print: measure how far the grid lands from
+        the leaf's edges.</p>
+
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="card">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light"><tr><th>Printer</th><th class="text-end">Right (mm)</th><th class="text-end">Down (mm)</th><th>Status</th><th></th></tr></thead>
+                    <tbody>
+                    <tr th:each="p : ${printers}">
+                        <td><div class="fw-semibold" th:text="${p.name}">Printer</div>
+                            <div class="small text-secondary" th:if="${p.notes}" th:text="${p.notes}"></div></td>
+                        <td class="amount" th:text="${p.offsetXMm}">0.0</td>
+                        <td class="amount" th:text="${p.offsetYMm}">0.0</td>
+                        <td><span th:replace="~{fragments/forms :: activeBadge(${p.active})}"></span></td>
+                        <td class="text-end text-nowrap">
+                            <a th:href="@{/printing/printers(edit=${p.id})}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil"></i></a>
+                            <form th:action="@{/printing/printers/{id}/{s}(id=${p.id}, s=${p.active} ? 'deactivate' : 'activate')}" method="post" class="d-inline">
+                                <button class="btn btn-outline-secondary btn-sm" type="submit" th:text="${p.active} ? 'Deactivate' : 'Activate'">Deactivate</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(printers)}"><td colspan="5" class="text-center text-secondary py-4">No printers yet.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <form th:action="@{/printing/printers}" th:object="${form}" method="post" class="card" novalidate>
+                <div class="card-header bg-white fw-semibold" th:text="${form.id == null} ? 'Add a printer' : 'Edit printer'">Add a printer</div>
+                <div class="card-body">
+                    <input type="hidden" th:field="*{id}">
+                    <input type="hidden" th:field="*{version}">
+                    <div th:replace="~{fragments/forms :: globalErrors}"></div>
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" th:field="*{name}" class="form-control" maxlength="80" placeholder="e.g. Accounts room laser"
+                               th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{name}"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label for="offsetXMm" class="form-label">Shift right (mm)</label>
+                            <input type="number" th:field="*{offsetXMm}" class="form-control" step="0.1" min="-20" max="20"
+                                   th:classappend="${#fields.hasErrors('offsetXMm')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:errors="*{offsetXMm}"></div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label for="offsetYMm" class="form-label">Shift down (mm)</label>
+                            <input type="number" th:field="*{offsetYMm}" class="form-control" step="0.1" min="-20" max="20"
+                                   th:classappend="${#fields.hasErrors('offsetYMm')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:errors="*{offsetYMm}"></div>
+                        </div>
+                    </div>
+                    <div class="form-text mb-3">Negative values shift left / up.</div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <input type="text" th:field="*{notes}" class="form-control" maxlength="200" placeholder="e.g. feed leaves face up, top edge first">
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>
+                    <a th:if="${form.id != null}" th:href="@{/printing/printers}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

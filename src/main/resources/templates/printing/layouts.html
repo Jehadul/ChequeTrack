@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Cheque layouts</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-layout-text-window"></i> Cheque layouts</h1>
+        <div class="ms-auto d-flex gap-1">
+            <a th:href="@{/printing/printers}" class="btn btn-outline-primary btn-sm"><i class="bi bi-printer"></i> Printers</a>
+            <a th:href="@{/printing/layouts/new}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> New layout</a>
+        </div>
+    </div>
+    <p class="text-secondary small">Where each field is printed on a bank's cheque leaf, in millimetres. Each bank account uses its
+        <strong>active</strong> layout; keep copies to try changes without disturbing printing.</p>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr><th>Layout</th><th>Bank account</th><th>Leaf size</th><th>Amount in words</th><th>Scan</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="l : ${layouts}">
+                    <td><a class="fw-semibold" th:href="@{/printing/layouts/{id}(id=${l.id})}" th:text="${l.name}">Layout</a></td>
+                    <td th:text="${l.account.label}">Account</td>
+                    <td class="text-nowrap" th:text="|${l.widthMm} × ${l.heightMm} mm|">200 × 90 mm</td>
+                    <td th:text="${l.wordsLanguage.name() == 'BANGLA'} ? 'Bangla' : 'English'">English</td>
+                    <td><i th:if="${l.backgroundAttachmentId}" class="bi bi-image text-success" title="Scan uploaded"></i>
+                        <span th:unless="${l.backgroundAttachmentId}" class="text-secondary small">none</span></td>
+                    <td><span th:if="${l.active}" class="badge text-bg-success">Active</span>
+                        <span th:unless="${l.active}" class="badge text-bg-secondary">Not used</span></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(layouts)}">
+                    <td colspan="6" class="text-center text-secondary py-4">No layouts yet. Create one for each bank account you write cheques from.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

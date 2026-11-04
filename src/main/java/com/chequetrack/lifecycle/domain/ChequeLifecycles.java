@@ -45,7 +45,7 @@ public final class ChequeLifecycles {
                     PENDING_APPROVAL, DRAFT)
             .on("CANCEL", "Cancel", EnumSet.of(DRAFT, APPROVED), IssuedStatus.CANCELLED, true)
             .on("PRINT", "Print", EnumSet.of(APPROVED), PRINTED, false)
-            .onApproved("REPRINT", "Reprint", EnumSet.of(PRINTED), PRINTED, ApprovalAction.REPRINT, true)
+            .onApproved("REPRINT", "Reprint", EnumSet.of(PRINTED), APPROVED, ApprovalAction.REPRINT, true)
             .on("HAND_OVER", "Hand over", EnumSet.of(PRINTED), IssuedStatus.ISSUED, false)
             .onApproved("DEFER", "Defer", EnumSet.of(IssuedStatus.ISSUED), IssuedStatus.ISSUED, ApprovalAction.DEFER, true)
             .on("CLEAR", "Mark cleared", EnumSet.of(IssuedStatus.ISSUED), IssuedStatus.CLEARED, false)

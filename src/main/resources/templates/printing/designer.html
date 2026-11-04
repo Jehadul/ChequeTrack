@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="|Layout ${layout.name}|">Layout</title>
+    <th:block layout:fragment="head">
+        <link rel="stylesheet" th:href="@{/webjars/jquery-ui/jquery-ui.min.css}">
+    </th:block>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <h1 class="h4 mb-0"><i class="bi bi-layout-text-window"></i> <span th:text="${layout.name}">Layout</span></h1>
+        <span th:if="${layout.active}" class="badge text-bg-success">Active</span>
+        <span th:unless="${layout.active}" class="badge text-bg-secondary">Not used</span>
+        <a th:href="@{/printing/layouts}" class="btn btn-link btn-sm ms-auto"><i class="bi bi-arrow-left"></i> Layouts</a>
+    </div>
+    <div class="text-secondary small mb-3">
+        <span th:text="${layout.account.label}">Account</span> ·
+        <span th:text="|${layout.widthMm} × ${layout.heightMm} mm|">200 × 90 mm</span> ·
+        amount in words in <span th:text="${layout.wordsLanguage.name() == 'BANGLA'} ? 'Bangla' : 'English'">English</span> ·
+        shown with sample data
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <form th:unless="${layout.active}" th:action="@{/printing/layouts/{id}/activate(id=${layout.id})}" method="post">
+            <button class="btn btn-success btn-sm" type="submit"><i class="bi bi-check2-circle"></i> Use for this account</button>
+        </form>
+        <a th:href="@{/printing/layouts/{id}/edit(id=${layout.id})}" class="btn btn-outline-primary btn-sm"><i class="bi bi-sliders"></i> Settings</a>
+        <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#copy-box">
+            <i class="bi bi-copy"></i> Copy</button>
+        <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#scan-box">
+            <i class="bi bi-image"></i> Scanned leaf</button>
+        <form th:action="@{/printing/layouts/{id}/test-print(id=${layout.id})}" method="post" target="_blank"
+              class="d-flex gap-1 ms-md-auto">
+            <select name="printerId" class="form-select form-select-sm" style="max-width: 240px" title="Printer (its offset is applied)">
+                <option value="">No printer offset</option>
+                <option th:each="p : ${printers}" th:value="${p.id}" th:text="${p.label}">Printer</option>
+            </select>
+            <button class="btn btn-outline-secondary btn-sm text-nowrap" type="submit"
+                    th:formaction="@{/printing/layouts/{id}/preview.pdf(id=${layout.id})}" formmethod="get">
+                <i class="bi bi-eye"></i> Preview PDF</button>
+            <button class="btn btn-primary btn-sm text-nowrap" type="submit"><i class="bi bi-grid-3x3"></i> Test print</button>
+        </form>
+    </div>
+
+    <div class="collapse" id="copy-box">
+        <form th:action="@{/printing/layouts/{id}/copy(id=${layout.id})}" method="post" class="card card-body mb-3 row g-2 flex-row">
+            <div class="col-md-5">
+                <label class="form-label small mb-1">For account</label>
+                <select name="targetAccountId" class="form-select form-select-sm">
+                    <option th:each="a : ${accounts}" th:value="${a.id}" th:text="${a.label}" th:selected="${a.id == layout.account.id}">Account</option>
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label small mb-1">Name of the copy</label>
+                <input type="text" name="name" class="form-control form-control-sm" maxlength="100" th:value="|Copy of ${layout.name}|">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-primary btn-sm w-100" type="submit">Copy</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="collapse" id="scan-box">
+        <form th:action="@{/printing/layouts/{id}/background(id=${layout.id})}" method="post" enctype="multipart/form-data"
+              class="card card-body mb-3">
+            <p class="small text-secondary mb-2">Scan a blank leaf at 100% (JPEG or PNG, up to 5 MB) and crop it exactly to the
+                leaf's edges. It is shown behind the fields so you can drag each one onto its place; it is never printed.</p>
+            <div class="d-flex gap-2">
+                <input type="file" name="file" accept="image/png,image/jpeg" class="form-control form-control-sm" required>
+                <button class="btn btn-primary btn-sm text-nowrap" type="submit"><i class="bi bi-upload"></i> Upload</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-white d-flex align-items-center">
+            <span class="fw-semibold">Designer</span>
+            <span class="small text-secondary ms-2">Drag a field to move it, drag its right edge to change the width. Each change is saved at once.</span>
+            <span id="save-state" class="small ms-auto"></span>
+        </div>
+        <div class="card-body designer-wrap">
+            <div id="sheet" class="designer-sheet"
+                 th:style="|width: ${layout.widthMm * scale}px; height: ${layout.heightMm * scale}px|"
+                 th:attr="data-scale=${scale}, data-move-url=@{/printing/layouts/{id}/fields/(id=${layout.id})}">
+                <img th:if="${layout.backgroundAttachmentId}" class="designer-bg" alt="Scanned blank leaf"
+                     th:src="@{/attachments/file/{a}(a=${layout.backgroundAttachmentId}, inline=true)}">
+                <div th:each="f, it : ${layout.fields}" class="designer-field" th:classappend="${f.printed} ? '' : 'off'"
+                     th:title="${f.fieldCode.label}"
+                     th:style="|left: ${f.xMm * scale}px; top: ${f.yMm * scale}px; width: ${f.widthMm * scale}px; font-family: ${f.fontFamily.css}; font-weight: ${f.bold ? 700 : 400}; text-align: ${#strings.toLowerCase(f.align)}|"
+                     th:attr="data-code=${f.fieldCode}, data-text=${texts[f.fieldCode]}, data-size=${f.fontSizePt},
+                              data-pitch=${f.charSpacingMm}, data-angle=${f.angleDeg}, data-gap=${f.lineGapMm}">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form th:action="@{/printing/layouts/{id}/fields(id=${layout.id})}" th:object="${fieldsForm}" method="post" class="card mb-3">
+        <div class="card-header bg-white fw-semibold">Exact values <span class="fw-normal small text-secondary">(mm from the leaf's top-left corner; font size in points)</span></div>
+        <div th:replace="~{fragments/forms :: globalErrors}"></div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0 designer-table">
+                <thead class="table-light">
+                <tr><th>Field</th><th>Print</th><th>X</th><th>Y</th><th>Width</th><th>Font</th><th>Size</th><th>Bold</th><th>Align</th>
+                    <th title="Date: distance between digit boxes">Digit spacing</th><th title="Amount in words: where line 2 starts">Line 2 X</th>
+                    <th title="Amount in words / signatory: distance to line 2">Line gap</th><th title="Crossing: rotation, counter-clockwise">Angle °</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="r, it : *{rows}" th:attr="data-code=${r.fieldCode}">
+                    <td class="text-nowrap fw-semibold">
+                        <input type="hidden" th:field="*{rows[__${it.index}__].fieldCode}">
+                        <span th:text="${r.fieldCode.label}">Date</span></td>
+                    <td><input type="checkbox" class="form-check-input" th:field="*{rows[__${it.index}__].printed}"></td>
+                    <td><input type="number" step="0.1" class="form-control form-control-sm" data-k="x" th:field="*{rows[__${it.index}__].x}"></td>
+                    <td><input type="number" step="0.1" class="form-control form-control-sm" data-k="y" th:field="*{rows[__${it.index}__].y}"></td>
+                    <td><input type="number" step="0.1" class="form-control form-control-sm" data-k="width" th:field="*{rows[__${it.index}__].width}"></td>
+                    <td><select class="form-select form-select-sm" th:field="*{rows[__${it.index}__].fontFamily}">
+                        <option th:each="ff : ${fontFamilies}" th:value="${ff}" th:text="${ff.label}">Helvetica</option></select></td>
+                    <td><input type="number" step="0.5" min="5" max="30" class="form-control form-control-sm" th:field="*{rows[__${it.index}__].fontSize}"></td>
+                    <td><input type="checkbox" class="form-check-input" th:field="*{rows[__${it.index}__].bold}"></td>
+                    <td><select class="form-select form-select-sm" th:field="*{rows[__${it.index}__].align}">
+                        <option th:each="a : ${aligns}" th:value="${a}" th:text="${#strings.capitalize(#strings.toLowerCase(a))}">Left</option></select></td>
+                    <td><input type="number" step="0.1" min="0" class="form-control form-control-sm" th:field="*{rows[__${it.index}__].charSpacing}"
+                               th:disabled="${r.fieldCode.name() != 'DATE'}"></td>
+                    <td><input type="number" step="0.1" class="form-control form-control-sm" th:field="*{rows[__${it.index}__].line2X}"
+                               th:disabled="${r.fieldCode.name() != 'AMOUNT_WORDS'}"></td>
+                    <td><input type="number" step="0.1" class="form-control form-control-sm" th:field="*{rows[__${it.index}__].lineGap}"
+                               th:disabled="${r.fieldCode.name() != 'AMOUNT_WORDS' and r.fieldCode.name() != 'SIGNATORY'}"></td>
+                    <td><input type="number" step="1" min="-90" max="90" class="form-control form-control-sm" th:field="*{rows[__${it.index}__].angle}"
+                               th:disabled="${r.fieldCode.name() != 'CROSSING'}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex align-items-center gap-2">
+            <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg"></i> Save field settings</button>
+            <span class="small text-secondary">Then use <strong>Test print</strong> on plain paper, hold it over a real leaf against the light, and adjust.</span>
+        </div>
+    </form>
+</th:block>
+
+<th:block layout:fragment="scripts">
+    <script th:src="@{/webjars/jquery-ui/jquery-ui.min.js}"></script>
+    <script th:src="@{/js/designer.js}"></script>
+</th:block>
+</body>
+</html>

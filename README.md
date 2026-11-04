@@ -70,7 +70,7 @@ How to use the system, and how its parts connect, is in the [User Manual](docs/U
 - **Export**: PDF and Excel, with filters on every report.
 
 ## Tech Stack
-Java 17 · Spring Boot 3 · Spring Security 6 + JWT · PostgreSQL 15 · Spring Data JPA · Thymeleaf · Bootstrap 5 · jQuery UI · DataTables · Chart.js · JasperReports · Apache POI · Spring Mail & Scheduler · Maven · Docker
+Java 17 · Spring Boot 3 · Spring Security 6 + JWT · PostgreSQL 15 · Spring Data JPA · Thymeleaf · Bootstrap 5 · jQuery UI · DataTables · Chart.js · Apache PDFBox (cheque printing) · JasperReports (reports) · Apache POI · Spring Mail & Scheduler · Maven · Docker
 
 ## Getting Started
 
