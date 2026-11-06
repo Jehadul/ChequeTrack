@@ -253,3 +253,20 @@ body {
     background: none;
     cursor: default;
 }
+
+/* Notifications */
+.notification-unread {
+    background: #f0f6fc;
+    border-left: 3px solid var(--app-brand);
+}
+
+.notification-body {
+    white-space: pre-line;
+}
+
+.email-frame {
+    width: 100%;
+    min-height: 70vh;
+    border: 1px solid #dee2e6;
+    background: #fff;
+}

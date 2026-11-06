@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Emails &amp; reminders</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-envelope"></i> Emails &amp; reminders</h1>
+        <form th:action="@{/notifications/admin/run}" method="post" class="ms-auto">
+            <button class="btn btn-primary btn-sm" type="submit"><i class="bi bi-play-circle"></i> Run daily reminders now</button>
+        </form>
+    </div>
+
+    <div class="alert py-2 small" th:classappend="${mailEnabled} ? 'alert-success' : 'alert-warning'">
+        <span th:if="${mailEnabled}"><i class="bi bi-send-check"></i> Email sending is on: queued emails go out within a minute.</span>
+        <span th:unless="${mailEnabled}"><i class="bi bi-send-slash"></i> Email sending is off (MAIL_ENABLED=false). Emails are kept below and
+            can be read here; nothing leaves the server. Set MAIL_ENABLED=true and an SMTP server to send them.</span>
+        <span class="ms-1" th:text="|The daily reminder runs on schedule '${cron}' (Asia/Dhaka).|"></span>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-white fw-semibold">Recent reminder runs</div>
+        <table class="table table-sm align-middle mb-0">
+            <thead class="table-light"><tr><th>Started</th><th>Run by</th><th class="text-end">Branches</th><th class="text-end">Items</th>
+                <th class="text-end">Emails</th><th class="text-end">Notifications</th></tr></thead>
+            <tbody>
+            <tr th:each="r : ${runs}">
+                <td class="small" th:text="${@displayFormat.ts(r.startedAt)}"></td>
+                <td th:text="${r.runBy}"></td>
+                <td class="amount" th:text="${r.branches}"></td>
+                <td class="amount" th:text="${r.items}"></td>
+                <td class="amount" th:text="${r.emails}"></td>
+                <td class="amount" th:text="${r.notifications}"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(runs)}"><td colspan="6" class="text-center text-secondary py-3">Not run yet.</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white fw-semibold">Email outbox <span class="fw-normal small text-secondary">(latest 200)</span></div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light"><tr><th>Queued</th><th>To</th><th>Subject</th><th>Status</th></tr></thead>
+                <tbody>
+                <tr th:each="e : ${emails}">
+                    <td class="small text-nowrap" th:text="${@displayFormat.ts(e.createdAt)}"></td>
+                    <td class="small"><div th:text="${e.toName} ?: ''"></div><div class="text-secondary" th:text="${e.toAddress}"></div></td>
+                    <td><a th:href="@{/notifications/admin/emails/{id}(id=${e.id})}" th:text="${e.subject}">Subject</a></td>
+                    <td class="text-nowrap">
+                        <span class="badge" th:classappend="${e.status.name() == 'SENT'} ? 'text-bg-success' : (${e.status.name() == 'FAILED'} ? 'text-bg-danger' : (${e.status.name() == 'PENDING'} ? 'text-bg-warning' : 'text-bg-secondary'))"
+                              th:text="${e.status.name() == 'NOT_SENT'} ? 'Not sent' : ${#strings.capitalize(#strings.toLowerCase(e.status))}" th:title="${e.lastError}">Sent</span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(emails)}"><td colspan="4" class="text-center text-secondary py-4">No emails yet.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="|ChequeTrack ${d.branch.code}|">ChequeTrack</title>
+</head>
+<body style="margin:0; padding:0; background:#f5f7fa; font-family:Arial, Helvetica, sans-serif; color:#212529;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f7fa;">
+    <tr><td align="center" style="padding:24px 12px;">
+        <table role="presentation" width="640" cellpadding="0" cellspacing="0" style="max-width:640px; background:#ffffff; border:1px solid #dee2e6;">
+            <tr><td style="background:#1f4e79; color:#ffffff; padding:16px 20px;">
+                <div style="font-size:18px; font-weight:bold;">ChequeTrack · daily reminder</div>
+                <div style="font-size:13px; opacity:.85;" th:text="|${d.branch.label()} · ${fmt.date(d.date)}|">CTG - Chattogram · 04/11/2026</div>
+            </td></tr>
+            <tr><td style="padding:16px 20px 0; font-size:14px;" th:text="|Cheques of your branch that need attention today and in the next ${d.leadDays} days.|">Intro</td></tr>
+            <tr th:each="s : ${d.sections}"><td style="padding:16px 20px 0;">
+                <div style="font-size:15px; font-weight:bold; margin-bottom:6px;"
+                     th:style="${s.alert} ? 'font-size:15px; font-weight:bold; margin-bottom:6px; color:#b02a37;' : 'font-size:15px; font-weight:bold; margin-bottom:6px; color:#1f4e79;'"
+                     th:text="|${s.title} (${#lists.size(s.items)})|">Section</div>
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; font-size:13px;">
+                    <tr th:each="i : ${s.items}" style="border-top:1px solid #e9ecef;">
+                        <td style="padding:6px 8px 6px 0; white-space:nowrap; vertical-align:top;">
+                            <a th:href="${i.link}" style="color:#1f4e79; font-weight:bold; text-decoration:none;" th:text="${i.number}">0001</a></td>
+                        <td style="padding:6px 8px; vertical-align:top;">
+                            <div th:if="${i.party}" th:text="${i.party}">Party</div>
+                            <div style="color:#6c757d;" th:text="${i.note}">note</div></td>
+                        <td style="padding:6px 0 6px 8px; text-align:right; white-space:nowrap; vertical-align:top;"
+                            th:text="${i.amount != null} ? |Tk ${fmt.amount(i.amount)}| : ''">Tk 0.00</td>
+                    </tr>
+                </table>
+            </td></tr>
+            <tr><td style="padding:20px;">
+                <a th:href="${home}" style="display:inline-block; background:#1f4e79; color:#ffffff; padding:10px 16px; text-decoration:none; border-radius:4px; font-size:14px;">Open ChequeTrack</a>
+            </td></tr>
+            <tr><td style="padding:0 20px 16px; font-size:11px; color:#6c757d;">
+                Sent automatically every morning to the cheque staff of this branch. Amounts in Taka.
+            </td></tr>
+        </table>
+    </td></tr>
+</table>
+</body>
+</html>

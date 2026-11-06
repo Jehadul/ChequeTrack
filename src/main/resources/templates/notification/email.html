@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="${email.subject}">Email</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <h1 class="h5 mb-0" th:text="${email.subject}">Subject</h1>
+        <a th:href="@{/notifications/admin}" class="btn btn-link btn-sm ms-auto"><i class="bi bi-arrow-left"></i> Outbox</a>
+    </div>
+    <dl class="row small mb-3">
+        <dt class="col-sm-2">To</dt><dd class="col-sm-10" th:text="${email.toName != null} ? |${email.toName} <${email.toAddress}>| : ${email.toAddress}"></dd>
+        <dt class="col-sm-2">Queued</dt><dd class="col-sm-10" th:text="${@displayFormat.ts(email.createdAt)}"></dd>
+        <dt class="col-sm-2">Status</dt>
+        <dd class="col-sm-10"><span th:text="${email.status}"></span>
+            <span th:if="${email.sentAt}" th:text="| at ${@displayFormat.ts(email.sentAt)}|"></span>
+            <span class="text-secondary" th:if="${email.lastError}" th:text="| – ${email.lastError}|"></span></dd>
+    </dl>
+    <!-- The email exactly as sent, in its own frame so its styles stay apart from the page -->
+    <iframe class="email-frame" th:attr="srcdoc=${email.bodyHtml}" sandbox="" title="Email"></iframe>
+</th:block>
+</body>
+</html>

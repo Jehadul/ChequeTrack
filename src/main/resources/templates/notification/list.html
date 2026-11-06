@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Notifications</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-bell"></i> Notifications</h1>
+        <div class="ms-auto d-flex gap-1">
+            <a sec:authorize="hasAuthority('NOTIFY_MANAGE')" th:href="@{/notifications/admin}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-envelope"></i> Emails &amp; reminders</a>
+            <form th:action="@{/notifications/read-all}" method="post" th:if="${unreadNotificationCount > 0}">
+                <button class="btn btn-outline-secondary btn-sm" type="submit"><i class="bi bi-check2-all"></i> Mark all read</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="list-group">
+        <a th:each="n : ${notifications}" th:href="@{/notifications/{id}/open(id=${n.id})}"
+           class="list-group-item list-group-item-action" th:classappend="${n.unread} ? 'notification-unread'">
+            <div class="d-flex align-items-start gap-2">
+                <i class="bi mt-1" th:classappend="${n.kind == 'BOUNCE'} ? 'bi-exclamation-octagon text-danger' : (${n.kind == 'DAILY_REMINDER'} ? 'bi-calendar-check text-primary' : 'bi-person-check text-warning')"></i>
+                <div class="flex-grow-1">
+                    <div class="fw-semibold" th:text="${n.title}">Title</div>
+                    <div class="small text-secondary notification-body" th:text="${n.body}">Body</div>
+                </div>
+                <div class="small text-secondary text-nowrap" th:text="${@displayFormat.ts(n.createdAt)}"></div>
+            </div>
+        </a>
+        <div th:if="${#lists.isEmpty(notifications)}" class="list-group-item text-center text-secondary py-4">No notifications yet.</div>
+    </div>
+</th:block>
+</body>
+</html>

@@ -23,7 +23,14 @@
             <a class="navbar-brand fw-semibold" th:href="@{/}">
                 <i class="bi bi-journal-check me-1"></i> ChequeTrack
             </a>
-            <div class="ms-auto dropdown" sec:authorize="isAuthenticated()">
+            <a sec:authorize="isAuthenticated()" th:href="@{/notifications}" class="ms-auto btn btn-link text-white position-relative"
+                title="Notifications">
+                <i class="bi bi-bell fs-5"></i>
+                <span th:if="${unreadNotificationCount != null and unreadNotificationCount > 0}"
+                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger"
+                    th:text="${unreadNotificationCount > 99} ? '99+' : ${unreadNotificationCount}">1</span>
+            </a>
+            <div class="dropdown" sec:authorize="isAuthenticated()">
                 <button class="btn btn-link text-white text-decoration-none dropdown-toggle" type="button"
                     data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-person-circle"></i>
@@ -125,6 +132,8 @@
                     <i class="bi bi-people me-2"></i>Users</a>
                 <a sec:authorize="hasAuthority('ROLE_MANAGE')" class="nav-link" th:href="@{/admin/roles}">
                     <i class="bi bi-shield-check me-2"></i>Roles &amp; permissions</a>
+                <a sec:authorize="hasAuthority('NOTIFY_MANAGE')" class="nav-link" th:href="@{/notifications/admin}">
+                    <i class="bi bi-envelope me-2"></i>Emails &amp; reminders</a>
 
                 <div sec:authorize="hasAuthority('AUDIT_VIEW')" class="nav-section">Audit</div>
                 <a sec:authorize="hasAuthority('AUDIT_VIEW')" class="nav-link" th:href="@{/audit}">
