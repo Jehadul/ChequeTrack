@@ -270,3 +270,45 @@ body {
     border: 1px solid #dee2e6;
     background: #fff;
 }
+
+/* Dashboard */
+.kpi-card {
+    color: inherit;
+    border-left: 4px solid var(--app-brand);
+    transition: box-shadow .15s;
+}
+
+.kpi-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+}
+
+.kpi-card.kpi-alert {
+    border-left-color: #dc3545;
+}
+
+.kpi-label {
+    font-size: .8rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+
+.kpi-value {
+    font-size: 1.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.kpi-sub {
+    font-size: .85rem;
+    color: #6c757d;
+}
+
+.chart-box {
+    position: relative;
+    height: 300px;
+}
+
+.chart-box-sm {
+    height: 260px;
+}

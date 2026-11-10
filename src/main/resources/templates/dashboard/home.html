@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-speedometer2"></i> Dashboard</h1>
+        <span class="text-secondary small" sec:authentication="principal.fullName">User</span>
+        <a th:if="${showCheques}" th:href="@{/analytics}" class="btn btn-outline-primary btn-sm ms-auto"><i class="bi bi-graph-up"></i> Analytics</a>
+    </div>
+
+    <th:block th:if="${showCheques}">
+        <div class="row g-3 mb-3">
+            <div class="col-sm-6 col-xl-3" sec:authorize="hasAuthority('RECEIVED_VIEW')">
+                <a th:href="@{/received(tab='in-hand')}" class="card kpi-card h-100 text-decoration-none">
+                    <div class="card-body">
+                        <div class="kpi-label"><i class="bi bi-wallet2"></i> Cheques in hand</div>
+                        <div class="kpi-value" th:text="${kpis.inHand.count}">0</div>
+                        <div class="kpi-sub" th:text="|Tk ${@displayFormat.amount(kpis.inHand.amount)}|">Tk 0.00</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-sm-6 col-xl-3" sec:authorize="hasAuthority('RECEIVED_VIEW')">
+                <a th:href="@{/received(tab='in-hand', to=${kpis.weekEnd})}" class="card kpi-card h-100 text-decoration-none">
+                    <div class="card-body">
+                        <div class="kpi-label"><i class="bi bi-box-arrow-in-down"></i> To deposit this week</div>
+                        <div class="kpi-value" th:text="${kpis.dueToDeposit.count}">0</div>
+                        <div class="kpi-sub" th:text="|Tk ${@displayFormat.amount(kpis.dueToDeposit.amount)} · dated up to ${@displayFormat.date(kpis.weekEnd)}|">Tk 0.00</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-sm-6 col-xl-3" sec:authorize="hasAuthority('ISSUED_VIEW')">
+                <a th:href="@{/issued/pdc}" class="card kpi-card h-100 text-decoration-none">
+                    <div class="card-body">
+                        <div class="kpi-label"><i class="bi bi-box-arrow-up"></i> Our cheques due this week</div>
+                        <div class="kpi-value" th:text="${kpis.dueToPay.count}">0</div>
+                        <div class="kpi-sub" th:text="|Tk ${@displayFormat.amount(kpis.dueToPay.amount)} the bank may pay|">Tk 0.00</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-sm-6 col-xl-3" sec:authorize="hasAuthority('RECEIVED_VIEW')">
+                <a th:href="@{/received(tab='bounced')}" class="card kpi-card h-100 text-decoration-none"
+                   th:classappend="${kpis.bouncedThisMonth > 0} ? 'kpi-alert'">
+                    <div class="card-body">
+                        <div class="kpi-label"><i class="bi bi-exclamation-octagon"></i> Bounced this month</div>
+                        <div class="kpi-value" th:text="${kpis.bouncedThisMonth}">0</div>
+                        <div class="kpi-sub" th:text="|Tk ${@displayFormat.amount(kpis.bouncedAmount)}|">Tk 0.00</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header bg-white d-flex flex-wrap align-items-center gap-2">
+                <span class="fw-semibold">Next 12 weeks: money expected in and out by cheque</span>
+                <span class="small ms-auto">
+                    <span class="text-success" th:text="|In Tk ${@displayFormat.amount(forecast.totalIn)}|"></span> ·
+                    <span class="text-danger" th:text="|Out Tk ${@displayFormat.amount(forecast.totalOut)}|"></span>
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="chart-box"><canvas id="forecast-chart" aria-label="Money expected in and out per week"></canvas></div>
+                <p class="small text-secondary mb-0 mt-2">In: received cheques in hand or deposited, by cheque date (security cheques left out).
+                    Out: our approved, printed and issued cheques. Cheques already due are counted in this week.</p>
+            </div>
+        </div>
+    </th:block>
+
+    <div class="row g-3">
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header bg-white d-flex align-items-center">
+                    <span class="fw-semibold" th:text="${decides} ? 'Pending my approval' : 'My requests waiting for approval'">Pending my approval</span>
+                    <span class="badge rounded-pill ms-2" th:classappend="${approvalCount > 0} ? 'text-bg-danger' : 'text-bg-secondary'" th:text="${approvalCount}">0</span>
+                    <a th:href="${decides} ? @{/approvals} : @{/approvals/mine}" class="small ms-auto">All</a>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item" th:each="r : ${approvals}">
+                        <a th:href="@{/approvals/{id}(id=${r.id})}" class="fw-semibold" th:text="${r.approvalAction.label}">Issue</a>
+                        <span class="small" th:text="|· ${r.recordLabel}|"></span>
+                        <div class="small text-secondary">
+                            <span th:if="${r.amount}" th:text="|Tk ${@displayFormat.amount(r.amount)} · |"></span>
+                            <span th:text="|asked by ${r.requestedBy}, ${@displayFormat.ts(r.requestedAt)}|"></span>
+                        </div>
+                    </li>
+                    <li class="list-group-item text-secondary small" th:if="${#lists.isEmpty(approvals)}">Nothing waiting.</li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-7" th:if="${showCheques}">
+            <div class="card h-100">
+                <div class="card-header bg-white fw-semibold">Recent activity</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex gap-2" th:each="a : ${activity}">
+                        <div class="flex-grow-1">
+                            <span class="small text-secondary" th:text="${a.kind}">Received</span>
+                            <a class="font-monospace fw-semibold" th:href="@{${a.link}}" th:text="${a.number}">0001</a>
+                            <span class="small" th:text="${a.from != null} ? |${a.from} → ${a.to}| : |→ ${a.to}|">→ In hand</span>
+                            <div class="small text-secondary text-truncate" th:if="${a.reason}" th:text="${a.reason}" th:title="${a.reason}"></div>
+                        </div>
+                        <div class="small text-secondary text-end text-nowrap">
+                            <div th:text="${@displayFormat.ts(a.at)}"></div>
+                            <div th:text="${a.username}"></div>
+                        </div>
+                    </li>
+                    <li class="list-group-item text-secondary small" th:if="${#lists.isEmpty(activity)}">No cheque activity yet.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block layout:fragment="scripts">
+    <th:block th:if="${showCheques}">
+        <script th:src="@{/webjars/chart.js/dist/chart.umd.js}"></script>
+        <script th:src="@{/js/charts.js}"></script>
+        <script th:inline="javascript">
+            chequeCharts.inOut('forecast-chart', /*[[${forecast.labels}]]*/ [], /*[[${forecast.moneyIn}]]*/ [],
+                /*[[${forecast.moneyOut}]]*/ [], 'Money in', 'Money out');
+        </script>
+    </th:block>
+</th:block>
+</body>
+</html>

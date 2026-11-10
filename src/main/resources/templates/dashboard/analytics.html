@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Analytics</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-graph-up"></i> Analytics</h1>
+        <span class="text-secondary small" th:text="|last 12 months, since ${@displayFormat.date(a.from)} · your branches|"></span>
+        <a th:href="@{/}" class="btn btn-link btn-sm ms-auto"><i class="bi bi-arrow-left"></i> Dashboard</a>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-4"><div class="card h-100"><div class="card-body">
+            <div class="kpi-label">Received</div>
+            <div class="kpi-value" th:text="|Tk ${@displayFormat.amount(a.receivedTotal.amount)}|">Tk 0</div>
+            <div class="kpi-sub" th:text="|${a.receivedTotal.count} cheques|">0 cheques</div>
+        </div></div></div>
+        <div class="col-md-4"><div class="card h-100"><div class="card-body">
+            <div class="kpi-label">Issued</div>
+            <div class="kpi-value" th:text="|Tk ${@displayFormat.amount(a.issuedTotal.amount)}|">Tk 0</div>
+            <div class="kpi-sub" th:text="|${a.issuedTotal.count} cheques printed or handed over|">0 cheques</div>
+        </div></div></div>
+        <div class="col-md-4"><div class="card h-100"><div class="card-body">
+            <div class="kpi-label">Bounce rate</div>
+            <div class="kpi-value" th:text="${a.receivedTotal.count == 0} ? '–' : |${#numbers.formatDecimal(100.0 * a.bouncedCheques / a.receivedTotal.count, 1, 1)} %|">0 %</div>
+            <div class="kpi-sub" th:text="|${a.bouncedCheques} of ${a.receivedTotal.count} received cheques bounced at least once|"></div>
+        </div></div></div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-white fw-semibold">Received and issued per month (Tk)</div>
+        <div class="card-body"><div class="chart-box"><canvas id="monthly-chart" aria-label="Received and issued per month"></canvas></div></div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-white fw-semibold">Top customers (received)</div>
+                <div class="card-body"><div class="chart-box chart-box-sm"><canvas id="customers-chart" aria-label="Top customers"></canvas></div></div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-white fw-semibold">Spending by supplier (issued)</div>
+                <div class="card-body"><div class="chart-box chart-box-sm"><canvas id="suppliers-chart" aria-label="Spending by supplier"></canvas></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-6" th:each="t : ${ {'customer', 'bank'} }">
+            <div class="card h-100" th:with="rows=${t == 'customer'} ? ${a.bounceByCustomer} : ${a.bounceByBank}">
+                <div class="card-header bg-white fw-semibold" th:text="${t == 'customer'} ? 'Bounce rate by customer' : 'Bounce rate by drawer bank'">Bounce rate</div>
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="table-light"><tr><th th:text="${t == 'customer'} ? 'Customer' : 'Bank'">Name</th>
+                        <th class="text-end">Cheques</th><th class="text-end">Bounced</th><th style="width: 35%">Rate</th></tr></thead>
+                    <tbody>
+                    <tr th:each="b : ${rows}">
+                        <td th:text="${b.name}">Name</td>
+                        <td class="amount" th:text="${b.cheques}">0</td>
+                        <td class="amount" th:text="${b.bounced}">0</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress flex-grow-1" style="height: 8px">
+                                    <div class="progress-bar" th:classappend="${b.percent() >= 20} ? 'bg-danger' : (${b.percent() > 0} ? 'bg-warning' : 'bg-success')"
+                                         th:style="|width: ${b.percent()}%|"></div>
+                                </div>
+                                <span class="small text-nowrap" th:text="|${b.percent()} %|">0 %</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(rows)}"><td colspan="4" class="text-center text-secondary py-3">No bounces.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<th:block layout:fragment="scripts">
+    <script th:src="@{/webjars/chart.js/dist/chart.umd.js}"></script>
+    <script th:src="@{/js/charts.js}"></script>
+    <script th:inline="javascript">
+        chequeCharts.inOut('monthly-chart', /*[[${a.months}]]*/ [], /*[[${a.received}]]*/ [], /*[[${a.issued}]]*/ [], 'Received', 'Issued');
+        chequeCharts.ranking('customers-chart', /*[[${a.topCustomers.![name]}]]*/ [], /*[[${a.topCustomers.![amount]}]]*/ [], '#198754');
+        chequeCharts.ranking('suppliers-chart', /*[[${a.topSuppliers.![name]}]]*/ [], /*[[${a.topSuppliers.![amount]}]]*/ [], '#dc3545');
+    </script>
+</th:block>
+</body>
+</html>
