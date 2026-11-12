@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="${def.title()}">Report</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <h1 class="h4 mb-0"><i class="bi bi-file-earmark-bar-graph"></i> <span th:text="${def.title()}">Report</span></h1>
+        <a th:href="@{/reports}" class="btn btn-link btn-sm ms-auto"><i class="bi bi-arrow-left"></i> Reports</a>
+    </div>
+    <p class="text-secondary small" th:text="${def.description()}"></p>
+
+    <form th:action="@{/reports/{c}(c=${def.code()})}" th:object="${filter}" method="get" class="card card-body mb-3" id="report-filters">
+        <input type="hidden" name="run" value="1">
+        <div class="row g-2 align-items-end">
+            <th:block th:if="${def.filters().contains(T(com.chequetrack.report.model.ReportFilter.Field).CHEQUE)}">
+                <div class="col-md-3">
+                    <label class="form-label small mb-1">Cheque</label>
+                    <select th:field="*{chequeKind}" class="form-select form-select-sm">
+                        <option value="RECEIVED">Received</option>
+                        <option value="ISSUED">Issued</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small mb-1">Cheque number</label>
+                    <input type="text" th:field="*{chequeNumber}" class="form-control form-control-sm font-monospace" placeholder="e.g. 100001 or CA 0001008">
+                </div>
+            </th:block>
+            <th:block th:if="${def.filters().contains(T(com.chequetrack.report.model.ReportFilter.Field).DATE)}">
+                <div class="col-6 col-md-2">
+                    <label class="form-label small mb-1" th:text="|${def.dateLabel()} from|">From</label>
+                    <input type="date" th:field="*{from}" class="form-control form-control-sm">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small mb-1">to</label>
+                    <input type="date" th:field="*{to}" class="form-control form-control-sm">
+                </div>
+            </th:block>
+            <div class="col-md-2" th:if="${def.filters().contains(T(com.chequetrack.report.model.ReportFilter.Field).BRANCH)}">
+                <label class="form-label small mb-1">Branch</label>
+                <select th:field="*{branchId}" class="form-select form-select-sm">
+                    <option value="">All my branches</option>
+                    <option th:each="b : ${branches}" th:value="${b.id}" th:text="${b.code}">HO</option>
+                </select>
+            </div>
+            <div class="col-md-2" th:if="${def.filters().contains(T(com.chequetrack.report.model.ReportFilter.Field).BANK)}">
+                <label class="form-label small mb-1">Bank</label>
+                <select th:field="*{bankId}" class="form-select form-select-sm">
+                    <option value="">All banks</option>
+                    <option th:each="b : ${banks}" th:value="${b.id}" th:text="${b.name}">Bank</option>
+                </select>
+            </div>
+            <div class="col-md-2" th:if="${def.filters().contains(T(com.chequetrack.report.model.ReportFilter.Field).STATUS)}">
+                <label class="form-label small mb-1">Status</label>
+                <select th:field="*{status}" class="form-select form-select-sm">
+                    <option value="">All</option>
+                    <option th:each="s : ${def.statuses()}" th:value="${s[0]}" th:text="${s[1]}">Status</option>
+                </select>
+            </div>
+            <div class="col-md-2" th:if="${parties != null}">
+                <label class="form-label small mb-1" th:text="${def.partyType() == null} ? 'Party' : (${def.partyType().name() == 'CUSTOMER'} ? 'Customer' : 'Supplier')">Party</label>
+                <select th:field="*{partyId}" class="form-select form-select-sm">
+                    <option value="">All</option>
+                    <option th:each="p : ${parties}" th:value="${p.id}" th:text="${p.name}">Party</option>
+                </select>
+            </div>
+            <div class="col-md-auto d-flex gap-1">
+                <button class="btn btn-primary btn-sm" type="submit"><i class="bi bi-eye"></i> Show</button>
+                <button class="btn btn-outline-secondary btn-sm" type="submit" th:formaction="@{/reports/{c}/export.pdf(c=${def.code()})}"
+                        formtarget="_blank"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
+                <button class="btn btn-outline-secondary btn-sm" type="submit" th:formaction="@{/reports/{c}/export.xlsx(c=${def.code()})}">
+                    <i class="bi bi-file-earmark-excel"></i> Excel</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="card" th:if="${table}">
+        <div class="card-header bg-white d-flex flex-wrap align-items-center gap-2">
+            <span class="fw-semibold" th:text="${table.title()}">Report</span>
+            <span class="small text-secondary" th:text="${table.subtitle()}">filters</span>
+            <span class="small text-secondary ms-auto" th:text="|${table.size()} row(s)|"></span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0 report-table">
+                <thead class="table-light">
+                <tr><th th:each="c : ${table.columns()}" th:text="${c.header()}" th:classappend="${c.isRightAligned()} ? 'text-end'">Col</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${table.rows()}">
+                    <td th:each="v, it : ${r}" th:with="c=${table.columns()[it.index]}"
+                        th:classappend="${c.isRightAligned()} ? 'amount' : (${c.type().name() == 'DATE' or c.type().name() == 'TIMESTAMP'} ? 'text-nowrap' : '')"
+                        th:text="${@cellText.format(v, c.type())}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(table.rows())}"><td th:colspan="${#lists.size(table.columns())}" class="text-center text-secondary py-4">No cheques match these filters.</td></tr>
+                </tbody>
+                <tfoot th:if="${table.totals() != null and !#lists.isEmpty(table.rows())}">
+                <tr class="fw-semibold">
+                    <td th:each="v, it : ${table.totals()}" th:with="c=${table.columns()[it.index]}"
+                        th:classappend="${it.index > 0 and c.isRightAligned()} ? 'amount'"
+                        th:text="${it.index == 0} ? ${v} : ${@cellText.format(v, c.type())}"></td>
+                </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div class="card-footer bg-white small text-secondary" th:if="${!#lists.isEmpty(table.notes()) or table.truncated()}">
+            <div th:each="n : ${table.notes()}" th:text="${n}"></div>
+            <div th:if="${table.truncated()}" class="text-danger" th:text="|Only the first ${table.size()} rows are shown; narrow the filters to see the rest.|"></div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

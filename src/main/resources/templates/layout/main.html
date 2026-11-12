@@ -66,6 +66,8 @@
                 <a class="nav-link" th:href="@{/}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
                 <a sec:authorize="hasAnyAuthority('RECEIVED_VIEW','ISSUED_VIEW')" class="nav-link" th:href="@{/analytics}">
                     <i class="bi bi-graph-up me-2"></i>Analytics</a>
+                <a sec:authorize="hasAnyAuthority('RECEIVED_VIEW','ISSUED_VIEW','CHEQUEBOOK_VIEW')" class="nav-link" th:href="@{/reports}">
+                    <i class="bi bi-file-earmark-bar-graph me-2"></i>Reports</a>
                 <!-- Each module adds its own menu section here, each link shown only with its permission -->
 
                 <a sec:authorize="hasAuthority('APPROVAL_DECIDE')" class="nav-link d-flex align-items-center"

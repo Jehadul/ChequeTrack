@@ -26,6 +26,8 @@
         <jquery-ui.version>1.13.2</jquery-ui.version>
         <pdfbox.version>3.0.3</pdfbox.version>
         <chartjs.version>4.4.1</chartjs.version>
+        <jasperreports.version>6.21.3</jasperreports.version>
+        <poi.version>5.2.5</poi.version>
     </properties>
 
     <dependencies>
@@ -119,6 +121,29 @@
             <groupId>org.webjars.npm</groupId>
             <artifactId>chart.js</artifactId>
             <version>${chartjs.version}</version>
+        </dependency>
+
+        <!-- Reports: PDF with JasperReports (layout built from each report's columns), Excel with Apache POI -->
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports</artifactId>
+            <version>${jasperreports.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-fonts</artifactId>
+            <version>${jasperreports.version}</version>
+        </dependency>
+        <!-- Compiles each report's expressions; the version Jasper brings predates Java 17 -->
+        <dependency>
+            <groupId>org.eclipse.jdt</groupId>
+            <artifactId>ecj</artifactId>
+            <version>3.37.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>${poi.version}</version>
         </dependency>
 
         <!-- Cheque printing: PDF drawn field by field at exact mm positions (Bangla shaping via GSUB) -->

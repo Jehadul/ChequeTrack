@@ -312,3 +312,13 @@ body {
 .chart-box-sm {
     height: 260px;
 }
+
+/* Reports */
+.report-card {
+    color: inherit;
+    border-left: 4px solid var(--app-brand);
+}
+
+.report-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+}

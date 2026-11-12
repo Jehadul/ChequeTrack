@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Reports</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <h1 class="h4 mb-1"><i class="bi bi-file-earmark-bar-graph"></i> Reports</h1>
+    <p class="text-secondary small mb-3">Choose a report, set the filters and view it on screen, or export it as PDF or Excel.
+        Reports only include your branches.</p>
+    <div class="row g-3">
+        <div class="col-md-6 col-xl-4" th:each="r : ${reports}">
+            <a th:href="@{/reports/{c}(c=${r.code()})}" class="card h-100 text-decoration-none report-card">
+                <div class="card-body">
+                    <div class="fw-semibold" th:text="${r.title()}">Report</div>
+                    <div class="small text-secondary" th:text="${r.description()}">What it shows</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-12" th:if="${#lists.isEmpty(reports)}"><div class="alert alert-light border">Your role has no reports.</div></div>
+    </div>
+</th:block>
+</body>
+</html>
