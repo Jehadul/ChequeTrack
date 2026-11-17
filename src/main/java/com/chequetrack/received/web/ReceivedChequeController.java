@@ -16,6 +16,7 @@ import com.chequetrack.received.domain.ChequeType;
 import com.chequetrack.received.domain.ReceivedCheque;
 import com.chequetrack.received.dto.BulkChequeForm;
 import com.chequetrack.received.dto.ChequeForm;
+import com.chequetrack.received.service.ChequeScanService;
 import com.chequetrack.received.service.ReceivedChequeLifecycle;
 import com.chequetrack.received.service.ReceivedChequeService;
 import com.chequetrack.security.service.CurrentUser;
@@ -29,6 +30,7 @@ import com.chequetrack.setup.service.ReasonService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -39,6 +41,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.Clock;
@@ -78,6 +82,7 @@ public class ReceivedChequeController {
     private final AuditQueryService auditQueryService;
     private final AttachmentService attachmentService;
     private final BranchScope branchScope;
+    private final ChequeScanService scanService;
     private final Clock clock;
 
     public ReceivedChequeController(ReceivedChequeService chequeService,
@@ -89,6 +94,7 @@ public class ReceivedChequeController {
                                     AuditQueryService auditQueryService,
                                     AttachmentService attachmentService,
                                     BranchScope branchScope,
+                                    ChequeScanService scanService,
                                     Clock clock) {
         this.chequeService = chequeService;
         this.transitionService = transitionService;
@@ -99,6 +105,7 @@ public class ReceivedChequeController {
         this.auditQueryService = auditQueryService;
         this.attachmentService = attachmentService;
         this.branchScope = branchScope;
+        this.scanService = scanService;
         this.clock = clock;
     }
 
@@ -146,12 +153,24 @@ public class ReceivedChequeController {
     }
 
     @PostMapping
-    public String create(@Valid @ModelAttribute("form") ChequeForm form, BindingResult binding, Model model,
+    public String create(@Valid @ModelAttribute("form") ChequeForm form, BindingResult binding,
+                         @RequestParam(value = "scan", required = false) MultipartFile scan, Model model,
                          RedirectAttributes redirect) {
         if (!binding.hasErrors()) {
             try {
                 ReceivedCheque c = chequeService.create(form);
-                redirect.addFlashAttribute("successMessage", "Cheque " + c.getChequeNumber() + " recorded. You can attach its scan below.");
+                if (scan != null && !scan.isEmpty()) {
+                    try {
+                        attachmentService.upload(ReceivedCheque.RECORD_TYPE, c.getId(), AttachmentCategory.CHEQUE_SCAN,
+                                "Scanned at entry", scan);
+                        redirect.addFlashAttribute("successMessage", "Cheque " + c.getChequeNumber() + " recorded with its scan.");
+                    } catch (BusinessException ex) {
+                        redirect.addFlashAttribute("errorMessage", "Cheque " + c.getChequeNumber()
+                                + " recorded, but the scan was not attached: " + ex.getMessage());
+                    }
+                } else {
+                    redirect.addFlashAttribute("successMessage", "Cheque " + c.getChequeNumber() + " recorded. You can attach its scan below.");
+                }
                 return "redirect:/received/" + c.getId();
             } catch (BusinessException ex) {
                 binding.reject("cheque", ex.getMessage());
@@ -187,6 +206,44 @@ public class ReceivedChequeController {
         return showBulkForm(model);
     }
 
+    // ---- scan (OCR) ----------------------------------------------------------------------------
+
+    /** Reads the MICR line of a cheque picture and returns the fields to fill in. */
+    @PostMapping("/scan")
+    @PreAuthorize(MANAGE)
+    @ResponseBody
+    public ResponseEntity<?> scan(@RequestParam("file") MultipartFile file) {
+        if (!scanService.enabled()) {
+            return ResponseEntity.notFound().build();
+        }
+        try {
+            return ResponseEntity.ok(scanService.read(file));
+        } catch (BusinessException ex) {
+            return ResponseEntity.unprocessableEntity().body(Map.of("message", ex.getMessage()));
+        }
+    }
+
+    /** Compares a saved cheque with the MICR line of one of its attached scans. */
+    @PostMapping("/{id}/scan-check/{attachmentId}")
+    public String scanCheck(@PathVariable Long id, @PathVariable Long attachmentId, RedirectAttributes redirect) {
+        try {
+            List<ChequeScanService.CheckLine> lines = scanService.check(id, attachmentId);
+            List<String> differs = lines.stream().filter(l -> !l.matches())
+                    .map(l -> l.field().toLowerCase() + " (recorded " + l.recorded() + ", scan "
+                            + (l.scanned() == null ? "not read" : l.scanned()) + ")")
+                    .toList();
+            if (differs.isEmpty()) {
+                redirect.addFlashAttribute("successMessage", "The scan matches: cheque number, routing number and account number.");
+            } else {
+                redirect.addFlashAttribute("errorMessage", "The scan does not match the record: " + String.join("; ", differs)
+                        + ". Check the cheque, or rescan it if the picture was unclear.");
+            }
+        } catch (BusinessException ex) {
+            redirect.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/received/" + id;
+    }
+
     // ---- one cheque ----------------------------------------------------------------------------
 
     @GetMapping("/{id}")
@@ -206,6 +263,7 @@ public class ReceivedChequeController {
         model.addAttribute("attachments", attachmentService.list(ReceivedCheque.RECORD_TYPE, id));
         model.addAttribute("categories", AttachmentCategory.values());
         model.addAttribute("canManage", CurrentUser.get().hasPermission(ReceivedPermissions.RECEIVED_MANAGE));
+        model.addAttribute("ocrEnabled", scanService.enabled());
         return "received/view";
     }
 
@@ -261,6 +319,7 @@ public class ReceivedChequeController {
         model.addAttribute("bankBranches", bankService.selectableBranches());
         model.addAttribute("branches", branchScope.selectableBranches());
         model.addAttribute("types", ChequeType.values());
+        model.addAttribute("ocrEnabled", scanService.enabled());
         return "received/form";
     }
 
@@ -268,6 +327,7 @@ public class ReceivedChequeController {
         model.addAttribute("customers", partyService.selectable(PartyType.CUSTOMER));
         model.addAttribute("bankBranches", bankService.selectableBranches());
         model.addAttribute("branches", branchScope.selectableBranches());
+        model.addAttribute("ocrEnabled", scanService.enabled());
         return "received/bulk";
     }
 }

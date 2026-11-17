@@ -13,6 +13,7 @@
 
     <form th:action="@{/received/bulk}" th:object="${form}" method="post" novalidate style="max-width: 980px" id="bulkForm">
         <div th:replace="~{fragments/forms :: globalErrors}"></div>
+        <th:block th:if="${ocrEnabled}"><div th:replace="~{fragments/scan :: card('firstNumber', false)}"></div></th:block>
         <div class="card mb-3">
             <div class="card-body">
                 <div class="row">
@@ -100,6 +101,7 @@
 </th:block>
 
 <th:block layout:fragment="scripts">
+    <script th:if="${ocrEnabled}" th:src="@{/js/cheque-scan.js}"></script>
     <script>
         // Preview of the series: numbers, dates and total
         $(function () {

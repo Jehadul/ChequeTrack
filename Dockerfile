@@ -8,6 +8,8 @@ RUN mvn -q -B package -DskipTests
 
 FROM eclipse-temurin:17-jre
 WORKDIR /app
+# Tesseract OCR for reading cheque scans (OCR_ENABLED=true); the English model comes with it
+RUN apt-get update && apt-get install -y --no-install-recommends tesseract-ocr && rm -rf /var/lib/apt/lists/*
 RUN useradd --system --create-home chequetrack && mkdir -p /data/attachments && chown chequetrack /data/attachments
 COPY --from=build /src/target/chequetrack-*.jar app.jar
 USER chequetrack

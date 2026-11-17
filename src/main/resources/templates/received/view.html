@@ -87,6 +87,22 @@
 
             <div th:replace="~{fragments/attachments :: panel('ReceivedCheque', ${c.id}, ${attachments}, ${canManage}, ${categories})}"></div>
 
+            <div class="card mt-3" th:if="${ocrEnabled}"
+                 th:with="scans=${attachments.?[category.name() == 'CHEQUE_SCAN']}">
+                <div class="card-body py-2" th:unless="${#lists.isEmpty(scans)}">
+                    <span class="small text-secondary me-2"><i class="bi bi-upc-scan"></i> Check the record against its scan:</span>
+                    <form th:each="s : ${scans}" th:action="@{/received/{id}/scan-check/{a}(id=${c.id}, a=${s.id})}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm my-1" th:title="${s.originalFilename}"
+                                onclick="this.disabled=true; this.form.submit();">
+                            <i class="bi bi-check2-square"></i> <span th:text="${s.originalFilename}">scan.jpg</span>
+                        </button>
+                    </form>
+                </div>
+                <div class="card-body py-2 small text-secondary" th:if="${#lists.isEmpty(scans)}">
+                    <i class="bi bi-upc-scan"></i> Attach a <em>Cheque scan</em> to check the number, bank and account against it.
+                </div>
+            </div>
+
             <div class="card mt-3">
                 <div class="card-header bg-white fw-semibold">Activity</div>
                 <div th:replace="~{fragments/history :: auditTable(${auditEntries}, false)}"></div>
