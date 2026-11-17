@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  "Scan the cheque" card: phone camera, file upload or laptop webcam. The picture is read on the server
+  (Tesseract OCR of the MICR line) and fills the cheque number, drawer bank branch and account number.
+  numberField: id of the cheque number input; keepFile: true to submit the picture with the form (name="scan").
+  Needs /js/cheque-scan.js on the page.
+-->
+<div th:fragment="card(numberField, keepFile)" class="card mb-3" id="scanCard"
+     th:attr="data-scan-url=@{/received/scan},data-number-field=${numberField}">
+    <div class="card-header bg-white fw-semibold">
+        <i class="bi bi-upc-scan"></i> Scan the cheque
+        <span class="fw-normal text-secondary small">(optional) fills in the details from the printed numbers along the bottom</span>
+    </div>
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <label class="btn btn-outline-primary btn-sm mb-0">
+                <i class="bi bi-camera"></i> Take photo
+                <input type="file" class="scan-source" accept="image/*" capture="environment" hidden>
+            </label>
+            <label class="btn btn-outline-primary btn-sm mb-0">
+                <i class="bi bi-upload"></i> Upload file
+                <input type="file" class="scan-source" accept="application/pdf,image/jpeg,image/png" hidden>
+            </label>
+            <button type="button" class="btn btn-outline-primary btn-sm d-none" id="scanWebcamBtn">
+                <i class="bi bi-webcam"></i> Webcam
+            </button>
+            <button type="button" class="btn btn-link btn-sm text-danger d-none" id="scanClear">
+                <i class="bi bi-x-lg"></i> Remove scan
+            </button>
+            <input type="file" id="scanFile" th:name="${keepFile} ? 'scan' : null" hidden>
+        </div>
+        <div class="d-flex gap-3 align-items-start mt-2">
+            <img id="scanPreview" class="scan-preview d-none" alt="Cheque scan">
+            <div class="flex-grow-1">
+                <div id="scanStatus" class="small"></div>
+                <details id="scanRawBox" class="small mt-1 d-none">
+                    <summary class="text-secondary">What was read</summary>
+                    <pre id="scanRaw" class="small bg-light border rounded p-2 mb-0 mt-1"></pre>
+                </details>
+            </div>
+        </div>
+        <div class="form-text" th:if="${keepFile}">The picture is saved with the cheque as its scan.</div>
+    </div>
+
+    <div class="modal fade" id="scanWebcamModal" tabindex="-1" aria-labelledby="scanWebcamTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header py-2">
+                    <h2 class="modal-title h6" id="scanWebcamTitle"><i class="bi bi-webcam"></i> Scan with the webcam</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="scan-video-wrap">
+                        <video id="scanVideo" playsinline muted autoplay></video>
+                        <div class="scan-guide" id="scanGuide"><div class="scan-guide-micr"></div></div>
+                    </div>
+                    <div id="scanCamError" class="alert alert-danger py-2 mt-2 mb-0 d-none"></div>
+                    <p class="small text-secondary mt-2 mb-0">
+                        Hold the cheque flat inside the frame, with the printed numbers along its bottom inside the dashed strip.
+                        Good light and a steady hand help.
+                    </p>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="scanCapture" disabled>
+                        <i class="bi bi-camera"></i> Capture
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
